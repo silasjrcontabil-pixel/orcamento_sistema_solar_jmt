@@ -1,26 +1,25 @@
-"""Cria os 3 usuários sócios da JMT Solar (idempotente — não duplica se username já existir).
+"""Cria/atualiza os 3 usuários sócios da JMT Solar com senha individual (padrão "Nome@1").
 
 Uso:
     python scripts/seed_users.py
 
-A senha inicial de todos vem de SEED_DEFAULT_PASSWORD (.env); troque após o primeiro login.
-IMPORTANTE: edite a lista SOCIOS abaixo com os nomes/usuários reais dos 3 sócios antes de
-rodar em produção — os valores abaixo são placeholders genéricos, não nomes reais.
+Cada sócio tem sua própria senha (campo "senha" abaixo) em vez de uma senha única compartilhada.
+Se o usuário já existir, a senha é atualizada para o valor atual da lista SOCIOS — rodar de
+novo depois de editar uma senha aqui aplica a troca no banco.
 """
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from app.config import settings  # noqa: E402
 from app.db import Base, SessionLocal, engine  # noqa: E402
 from app.models.user import User  # noqa: E402
 from app.security import hash_password  # noqa: E402
 
 SOCIOS = [
-    {"nome": "Jheferson Luys", "username": "jheferson_luys"},
-    {"nome": "Thiago Catalan", "username": "thiago_catalan"},
-    {"nome": "Matheus Carvalho", "username": "matheus_carvalho"},
+    {"nome": "Jheferson Luys", "username": "Jheferson Luys", "senha": "Jheferson@1"},
+    {"nome": "Thiago Catalan", "username": "Thiago Catalan", "senha": "Thiago@1"},
+    {"nome": "Matheus Carvalho", "username": "Matheus Carvalho", "senha": "Matheus@1"},
 ]
 
 
@@ -31,12 +30,13 @@ def main():
         for socio in SOCIOS:
             existing = db.query(User).filter(User.username == socio["username"]).first()
             if existing:
-                print(f"- {socio['username']} já existe (id={existing.id}), pulando.")
+                existing.password_hash = hash_password(socio["senha"])
+                print(f"~ senha atualizada para {socio['username']} (id={existing.id})")
                 continue
             user = User(
                 nome=socio["nome"],
                 username=socio["username"],
-                password_hash=hash_password(settings.SEED_DEFAULT_PASSWORD),
+                password_hash=hash_password(socio["senha"]),
                 ativo=True,
             )
             db.add(user)
@@ -45,8 +45,9 @@ def main():
     finally:
         db.close()
 
-    print("\nSenha padrão (SEED_DEFAULT_PASSWORD):", settings.SEED_DEFAULT_PASSWORD)
-    print("Troque a senha de cada sócio assim que possível.")
+    print("\nSenhas aplicadas:")
+    for socio in SOCIOS:
+        print(f"  {socio['username']}: {socio['senha']}")
 
 
 if __name__ == "__main__":

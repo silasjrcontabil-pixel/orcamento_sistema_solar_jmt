@@ -22,8 +22,6 @@ services:
       - key: JWT_EXPIRE_MINUTES
         value: "1440"
       - key: FRONTEND_ORIGIN
-        sync: false # domínio exato do frontend publicado (Vercel/Netlify), sem barra final
-      - key: SEED_DEFAULT_PASSWORD
-        sync: false
+        sync: false # domínio(s) do frontend publicado (Vercel/Netlify), sem barra final; separe por vírgula se houver mais de um
       - key: PYTHON_VERSION
         value: "3.12.0"

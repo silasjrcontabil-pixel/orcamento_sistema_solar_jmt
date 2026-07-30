@@ -31,8 +31,8 @@ Edite `.env`:
 - `DATABASE_URL`: string do Postgres do Supabase (`postgresql+psycopg2://...`). Para rodar sem
   Postgres disponível, use `sqlite:///./dev.db` — funciona igual para tudo, inclusive Alembic.
 - `JWT_SECRET`: qualquer string aleatória longa.
-- `FRONTEND_ORIGIN`: origem exata do frontend (ex.: `http://localhost:5174` em dev).
-- `SEED_DEFAULT_PASSWORD`: senha inicial dos 3 usuários sócios (troque depois do primeiro login).
+- `FRONTEND_ORIGIN`: origem(ns) do frontend (ex.: `http://localhost:5174` em dev; separe por
+  vírgula se houver mais de uma).
 
 ### 3. Migrações e seed dos usuários
 
@@ -41,9 +41,10 @@ alembic upgrade head
 python scripts/seed_users.py
 ```
 
-O seed cria (se ainda não existirem) os usuários `socio1`, `socio2`, `socio3` com a senha de
-`SEED_DEFAULT_PASSWORD`. Edite a lista `SOCIOS` em `scripts/seed_users.py` para usar os nomes
-reais antes de rodar em produção.
+O seed cria (ou, se já existirem, atualiza a senha de) os 3 usuários sócios com a senha
+individual de cada um definida na lista `SOCIOS` em `scripts/seed_users.py` (padrão
+`Nome@1`, ex.: `Jheferson@1`). Editar a senha de alguém na lista e rodar o script de novo
+aplica a troca no banco.
 
 ### 4. Subir a API
 
@@ -84,8 +85,7 @@ outros endpoints/testes em máquinas sem o runtime GTK.
 WeasyPrint via apt no build, roda `alembic upgrade head` no start e sobe o uvicorn. Configure
 no painel do Render (ou via `render.yaml` + variáveis marcadas `sync: false`):
 - `DATABASE_URL` → Postgres do Supabase (não usar o Postgres free do Render, que expira).
-- `FRONTEND_ORIGIN` → domínio publicado do frontend (Vercel/Netlify).
-- `SEED_DEFAULT_PASSWORD` → senha inicial dos sócios.
+- `FRONTEND_ORIGIN` → domínio(s) publicado(s) do frontend (Vercel/Netlify).
 
 Depois do primeiro deploy, rode `python scripts/seed_users.py` uma vez (shell do Render ou
 localmente apontando `DATABASE_URL` para o Supabase) para criar os 3 usuários.

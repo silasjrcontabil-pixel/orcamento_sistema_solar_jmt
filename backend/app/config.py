@@ -18,8 +18,6 @@ class Settings(BaseSettings):
 
     FRONTEND_ORIGIN: str = "http://localhost:5174"
 
-    SEED_DEFAULT_PASSWORD: str = "troque-no-primeiro-acesso"
-
     @property
     def FRONTEND_ORIGINS(self) -> list[str]:
         """FRONTEND_ORIGIN pode conter múltiplas origens separadas por vírgula."""

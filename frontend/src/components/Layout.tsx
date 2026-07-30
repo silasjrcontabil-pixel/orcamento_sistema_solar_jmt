@@ -65,19 +65,19 @@ export function Layout() {
       </aside>
 
       {/* Topbar - mobile */}
-      <header className="lg:hidden sticky top-0 z-40 flex items-center gap-[22px] border-b border-border bg-background-soft px-[28px] py-[22px]">
+      <header className="lg:hidden sticky top-0 z-40 flex items-center gap-3 border-b border-border bg-background-soft px-4 py-3">
         <button
           onClick={() => setMobileOpen((v) => !v)}
-          className="flex h-[78px] w-[78px] shrink-0 items-center justify-center rounded-full border border-border bg-secondary text-foreground active:bg-primary/10"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-secondary text-foreground active:bg-primary/10"
           aria-label="Abrir menu"
         >
-          <svg width="39" height="39" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" />
           </svg>
         </button>
-        <div className="flex items-center gap-[17px]">
-          <img src={logo} alt="JMT Solar" className="h-[67px] w-[67px] rounded-full object-cover" />
-          <span className="font-display text-[25px] font-extrabold">JMT Solar</span>
+        <div className="flex items-center gap-2.5">
+          <img src={logo} alt="JMT Solar" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+          <span className="font-display text-lg font-extrabold">JMT Solar</span>
         </div>
       </header>
 
