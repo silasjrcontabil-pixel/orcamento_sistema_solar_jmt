@@ -1,0 +1,30 @@
+name: Keep Supabase Alive
+
+# Faz uma query trivial no Postgres do Supabase 1x/dia para resetar o contador de
+# inatividade e evitar a pausa automática do projeto. Roda no GitHub Actions (fora do
+# Render) porque o Render free também dorme por inatividade e poderia não estar de pé
+# na hora do disparo.
+on:
+  schedule:
+    - cron: '0 12 * * *' # todo dia às 12:00 UTC (~09:00 em Brasília)
+  workflow_dispatch: {}
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query Supabase para resetar o timer de inatividade
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          pip install psycopg2-binary
+          python - <<'PY'
+          import os
+          import psycopg2
+
+          conn = psycopg2.connect(os.environ["DATABASE_URL"])
+          cur = conn.cursor()
+          cur.execute("SELECT 1;")
+          print("ping ok:", cur.fetchone())
+          conn.close()
+          PY
