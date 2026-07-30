@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Proposta #{{ budget.numero_proposta }}</title>
+<style>
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #0a0a0a;
+    color: #e6e6e6;
+    font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif;
+    font-size: 10.5px;
+  }
+  .gold { color: #EFA809; }
+  .muted { color: #8a8a8a; }
+  .page {
+    position: relative;
+    width: 100%;
+    min-height: 297mm;
+    padding: 26px 36px 70px 36px;
+    page-break-after: always;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #232323;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+  }
+  .topbar .brand { font-weight: bold; font-size: 13px; letter-spacing: 0.5px; }
+  .badge {
+    background: #1a1a1a;
+    border: 1px solid #3a2c05;
+    color: #EFA809;
+    border-radius: 999px;
+    padding: 4px 14px;
+    font-size: 9.5px;
+    font-weight: bold;
+  }
+  .footer {
+    position: absolute;
+    left: 36px;
+    right: 36px;
+    bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 8.5px;
+    color: #7a7a7a;
+    border-top: 1px solid #232323;
+    padding-top: 10px;
+  }
+  .footer .valido { color: #EFA809; font-weight: bold; }
+
+  .cover-page { padding: 0; overflow: hidden; }
+  .cover-bg { position: absolute; top: 0; left: 0; width: 210mm; height: 297mm; }
+  .cover-content { position: relative; width: 56%; height: 297mm; padding: 34px 20px 30px 40px; display: flex; flex-direction: column; }
+  .cover-logo { width: 160px; }
+  .cover-heading { margin-top: 110px; }
+  .cover-kicker { font-size: 10px; font-weight: bold; letter-spacing: 2px; color: #EFA809; }
+  .cover-heading h1 { margin: 8px 0 0 0; font-size: 30px; color: #fff; line-height: 1.2; }
+  .cover-heading .accent { color: #EFA809; }
+  .cover-sub { margin-top: 10px; font-size: 10.5px; color: #c9c9c9; line-height: 1.5; max-width: 92%; }
+  .cover-benefits { margin-top: 22px; display: flex; flex-direction: column; gap: 14px; }
+  .cover-benefit { display: flex; align-items: flex-start; gap: 12px; }
+  .cover-benefit-icon {
+    width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid #EFA809;
+    color: #EFA809; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; flex-shrink: 0;
+  }
+  .cover-benefit-title { font-size: 10.5px; font-weight: bold; color: #f2f2f2; }
+  .cover-benefit-desc { font-size: 8.5px; color: #9a9a9a; margin-top: 2px; }
+  .cover-fields { margin-top: auto; padding-top: 22px; font-size: 9.5px; color: #e6e6e6; max-width: 300px; }
+  .cover-fields .row { display: flex; margin-bottom: 8px; border-bottom: 1px solid #2a2a2a; padding-bottom: 6px; }
+  .cover-fields .label { font-weight: bold; color: #EFA809; width: 105px; flex-shrink: 0; }
+  .cover-fields .value { color: #d8d8d8; }
+
+  h1, h2, h3 { font-family: 'DejaVu Sans', Arial, sans-serif; margin: 0; }
+  .section-title {
+    display: flex; align-items: center; gap: 10px;
+    margin: 22px 0 12px 0;
+  }
+  .section-title .icon {
+    width: 22px; height: 22px; border-radius: 6px;
+    background: #1a1408; display: flex; align-items: center; justify-content: center;
+    color: #EFA809; font-weight: bold; font-size: 12px;
+  }
+  .section-title h2 { font-size: 13px; color: #f2f2f2; }
+
+  .grid-2 { display: flex; gap: 16px; }
+  .grid-2 > div { flex: 1; min-width: 0; }
+  .grid-4 { display: flex; gap: 12px; }
+  .grid-4 > div { flex: 1; min-width: 0; }
+
+  .card {
+    background: #111214;
+    border: 1px solid #222325;
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .card-gold {
+    background: linear-gradient(135deg, #EFA809, #C98607);
+    color: #1a1200;
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .card-gold .label { font-size: 8.5px; font-weight: bold; text-transform: uppercase; opacity: 0.75; }
+  .card-gold .value { font-size: 18px; font-weight: bold; margin-top: 2px; }
+
+  table.kv { width: 100%; border-collapse: collapse; }
+  table.kv tr { border-bottom: 1px solid #1d1e20; }
+  table.kv td { padding: 8px 2px; font-size: 10px; }
+  table.kv td.k { color: #8a8a8a; width: 42%; }
+  table.kv td.v { color: #f0f0f0; font-weight: bold; text-align: right; }
+  table.kv td.v.gold { color: #EFA809; }
+
+  .equip-card {
+    background: #111214; border: 1px solid #222325; border-radius: 10px;
+    padding: 12px 14px; border-top: 3px solid #EFA809; margin-bottom: 10px;
+  }
+  .equip-card .tag { font-size: 8px; letter-spacing: 0.5px; color: #8a8a8a; text-transform: uppercase; }
+  .equip-card .title { font-size: 12px; font-weight: bold; color: #f2f2f2; margin: 3px 0; }
+  .equip-card .subtitle { font-size: 9px; color: #9a9a9a; margin-bottom: 8px; }
+  .equip-stats { display: flex; gap: 8px; }
+  .equip-stat {
+    background: #17181a; border-radius: 6px; padding: 6px 10px; flex: 1;
+  }
+  .equip-stat .l { font-size: 7.5px; color: #8a8a8a; text-transform: uppercase; }
+  .equip-stat .v { font-size: 11px; font-weight: bold; color: #EFA809; }
+
+  .stat-tile { background: #111214; border: 1px solid #222325; border-radius: 10px; padding: 12px 14px; }
+  .stat-tile .l { font-size: 8px; color: #8a8a8a; text-transform: uppercase; font-weight: bold; }
+  .stat-tile .v { font-size: 15px; font-weight: bold; color: #f2f2f2; margin-top: 3px; }
+
+  .kpi-gold { background: #EFA809; color: #1a1200; border-radius: 8px; padding: 10px 12px; flex:1; }
+  .kpi-gold .l { font-size: 7.5px; font-weight: bold; text-transform: uppercase; opacity: 0.75; }
+  .kpi-gold .v { font-size: 14px; font-weight: bold; margin-top: 2px; }
+
+  .bars {
+    display: flex; align-items: flex-end; gap: 10px; height: 130px; padding: 6px 4px 0 4px;
+  }
+  .bars .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+  .bars .bar-value { font-size: 8px; color: #EFA809; font-weight: bold; margin-bottom: 3px; }
+  .bars .bar { width: 60%; background: linear-gradient(180deg, #EFA809, #8a5c05); border-radius: 4px 4px 0 0; }
+  .bars .bar-label { font-size: 8px; color: #8a8a8a; margin-top: 5px; }
+
+  .donut-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 130px; }
+  .donut {
+    width: 100px; height: 100px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: bold; color: #fff;
+  }
+  .donut .hole { width: 66px; height: 66px; border-radius: 50%; background: #111214; display:flex; align-items:center; justify-content:center; }
+
+  .line-chart { position: relative; height: 130px; margin: 6px 4px 0 4px; }
+  .line-area { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(239,168,9,0.35), rgba(239,168,9,0)); }
+  .line-dot { position: absolute; width: 6px; height: 6px; margin-left:-3px; margin-top:-3px; border-radius: 50%; background: #EFA809; border: 1.5px solid #1a1200; }
+  .line-labels { display: flex; justify-content: space-between; font-size: 8px; color: #8a8a8a; margin-top: 6px; }
+
+  .compare-card { text-align: center; padding: 18px 10px; }
+  .compare-card .v { font-size: 17px; font-weight: bold; margin: 6px 0 2px 0; }
+  .compare-card .v.bad { color: #e25858; }
+  .compare-card .v.good { color: #EFA809; }
+  .compare-card .l { font-size: 8.5px; color: #8a8a8a; }
+  .compare-card .emoji { font-size: 20px; }
+
+  .warranty-card { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; }
+  .warranty-card .t { font-size: 11px; font-weight: bold; color: #EFA809; }
+  .warranty-card .d { font-size: 8.5px; color: #9a9a9a; margin-top: 2px; }
+
+  table.proj { width: 100%; border-collapse: collapse; font-size: 9.5px; }
+  table.proj th { text-align: left; color: #8a8a8a; text-transform: uppercase; font-size: 8px; padding: 6px 4px; border-bottom: 1px solid #232323; }
+  table.proj td { padding: 7px 4px; border-bottom: 1px solid #1a1b1d; }
+  table.proj td.status-lucro { color: #2ecc71; font-weight: bold; }
+  table.proj td.status-pagando { color: #e2b93b; }
+  .dot { display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:4px; }
+  .dot-red { background:#e25858; }
+  .dot-gold { background:#EFA809; }
+
+  table.itens { width: 100%; border-collapse: collapse; font-size: 9.5px; margin-top: 8px; }
+  table.itens th { text-align: left; color: #8a8a8a; text-transform: uppercase; font-size: 8px; padding: 6px 4px; border-bottom: 1px solid #232323; }
+  table.itens td { padding: 7px 4px; border-bottom: 1px solid #1a1b1d; }
+  table.itens td.num { text-align: right; }
+
+  .note {
+    background: #17130a; border: 1px solid #3a2c05; color: #d9a441; border-radius: 8px;
+    padding: 10px 12px; font-size: 8.5px; margin-top: 10px;
+  }
+  .obs-box { background: #111214; border: 1px solid #222325; border-radius: 8px; padding: 12px 14px; min-height: 50px; font-size: 9.5px; color: #d0d0d0; }
+  .accept-box { border: 1px dashed #3a3a3a; border-radius: 8px; padding: 30px; text-align: center; color: #6a6a6a; font-size: 9px; letter-spacing: 1px; margin-top: 16px; }
+</style>
+</head>
+<body>
+
+{# ============================ PÁGINA 1 — CAPA ============================ #}
+<div class="page cover-page">
+  <img class="cover-bg" src="{{ capa_bg_data_uri }}">
+
+  <div class="cover-content">
+    <img class="cover-logo" src="{{ logo_data_uri }}">
+
+    <div class="cover-heading">
+      <div class="cover-kicker">PROPOSTA COMERCIAL</div>
+      {% if solar %}
+        <h1>DE ENERGIA<br><span class="accent">SOLAR</span></h1>
+      {% else %}
+        <h1>DE EQUIPAMENTOS<br><span class="accent">FOTOVOLTAICOS</span></h1>
+      {% endif %}
+      <div class="cover-sub">Projeto personalizado para {{ client.nome }}{% if solar %} &mdash; sistema de {{ "%.2f"|format(solar.potencia_sistema_kwp) }} kWp{% endif %}.</div>
+    </div>
+
+    <div class="cover-benefits">
+      <div class="cover-benefit">
+        <div class="cover-benefit-icon">$</div>
+        <div><div class="cover-benefit-title">Mais Economia</div><div class="cover-benefit-desc">Reduza sua conta de energia.</div></div>
+      </div>
+      <div class="cover-benefit">
+        <div class="cover-benefit-icon">&#9851;</div>
+        <div><div class="cover-benefit-title">Mais Sustentabilidade</div><div class="cover-benefit-desc">Energia limpa que preserva o planeta.</div></div>
+      </div>
+      <div class="cover-benefit">
+        <div class="cover-benefit-icon">&#8962;</div>
+        <div><div class="cover-benefit-title">Mais Valorização</div><div class="cover-benefit-desc">Seu imóvel mais valorizado e eficiente.</div></div>
+      </div>
+      <div class="cover-benefit">
+        <div class="cover-benefit-icon">&#9728;</div>
+        <div><div class="cover-benefit-title">Mais Futuro</div><div class="cover-benefit-desc">Uma escolha inteligente para você e as próximas gerações.</div></div>
+      </div>
+    </div>
+
+    <div class="cover-fields">
+      <div class="row"><span class="label">CLIENTE:</span><span class="value">{{ client.nome }}</span></div>
+      <div class="row"><span class="label">CNPJ/CPF:</span><span class="value">{{ client.cnpj_cpf or "-" }}</span></div>
+      <div class="row"><span class="label">Nº DA PROPOSTA:</span><span class="value">{{ budget.numero_proposta }}</span></div>
+      <div class="row"><span class="label">DATA:</span><span class="value">{{ budget.created_at.strftime("%d/%m/%Y") }}</span></div>
+    </div>
+  </div>
+</div>
+
+{# ============================ PÁGINA 2 — DADOS/DIMENSIONAMENTO/EQUIPAMENTOS/INVESTIMENTO ============================ #}
+<div class="page">
+  <div class="topbar">
+    <span class="brand gold">JMT SOLAR</span>
+    <span class="muted">Proposta #{{ budget.numero_proposta }} · {{ budget.created_at.strftime("%d/%m/%Y") }}</span>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="section-title"><span class="icon">&#128100;</span><h2>Dados do Cliente</h2></div>
+      <div class="card">
+        <table class="kv">
+          <tr><td class="k">Nome</td><td class="v">{{ client.nome }}</td></tr>
+          <tr><td class="k">Telefone</td><td class="v">{{ client.telefone }}</td></tr>
+          {% if client.email %}<tr><td class="k">E-mail</td><td class="v">{{ client.email }}</td></tr>{% endif %}
+          {% if client.cnpj_cpf %}<tr><td class="k">CPF/CNPJ</td><td class="v">{{ client.cnpj_cpf }}</td></tr>{% endif %}
+          <tr><td class="k">Endereço</td><td class="v">{{ client.endereco }}</td></tr>
+          <tr><td class="k">Município/UF</td><td class="v">{{ client.municipio_nome }}/{{ client.estado_uf }}</td></tr>
+          <tr><td class="k">Tipo</td><td class="v">{{ client.tipo_residencia }}</td></tr>
+        </table>
+      </div>
+    </div>
+    {% if solar %}
+    <div>
+      <div class="section-title"><span class="icon">&#9889;</span><h2>Dimensionamento</h2></div>
+      <div class="card">
+        <table class="kv">
+          <tr><td class="k">Consumo</td><td class="v gold">{{ "%.0f"|format(solar.consumo_mensal_kwh) }} kWh/mês</td></tr>
+          <tr><td class="k">Sistema</td><td class="v gold">{{ "%.2f"|format(solar.potencia_sistema_kwp) }} kWp</td></tr>
+          <tr><td class="k">Painéis</td><td class="v">{{ solar.qtd_paineis }} unidades</td></tr>
+          <tr><td class="k">Geração est.</td><td class="v gold">{{ "%.0f"|format(solar.geracao_estimada_kwh) }} kWh/mês</td></tr>
+          <tr><td class="k">Telhado</td><td class="v">{{ solar.tipo_telhado }}</td></tr>
+          <tr><td class="k">Orientação</td><td class="v">{{ solar.orientacao }}</td></tr>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <div>
+      <div class="section-title"><span class="icon">&#128203;</span><h2>Resumo do Orçamento</h2></div>
+      <div class="card">
+        <table class="kv">
+          <tr><td class="k">Tipo</td><td class="v">Itens individuais</td></tr>
+          <tr><td class="k">Itens</td><td class="v">{{ itens|length }}</td></tr>
+          <tr><td class="k">Margem de lucro</td><td class="v gold">{{ "%.0f"|format(budget.margem_lucro_pct) }}%</td></tr>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if solar %}
+  <div class="section-title"><span class="icon">&#128295;</span><h2>Equipamentos</h2></div>
+  <div class="grid-2">
+    <div>
+      <div class="equip-card">
+        <div class="tag">Módulo Fotovoltaico</div>
+        <div class="title">{{ solar.painel.marca or solar.painel.nome }}</div>
+        <div class="subtitle">{{ solar.painel.modelo }}</div>
+        <div class="equip-stats">
+          <div class="equip-stat"><div class="l">Potência</div><div class="v">{{ "%.0f"|format(solar.potencia_wp_utilizada) }} Wp</div></div>
+          <div class="equip-stat"><div class="l">Quantidade</div><div class="v">{{ solar.qtd_paineis }} un.</div></div>
+        </div>
+      </div>
+      <div class="equip-card">
+        <div class="tag">Estrutura de Fixação</div>
+        <div class="title">{{ solar.painel.composicao_estrutura or "Conforme projeto" }}</div>
+        <div class="subtitle">Conforme projeto · {{ solar.tipo_telhado }}</div>
+        <div class="equip-stats">
+          <div class="equip-stat"><div class="l">Quantidade</div><div class="v">{{ solar.qtd_paineis }} un.</div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="equip-card">
+        <div class="tag">Inversor Solar</div>
+        <div class="title">{{ solar.inversor.marca or solar.inversor.nome }}</div>
+        <div class="subtitle">{{ solar.inversor.modelo }}</div>
+        <div class="equip-stats">
+          <div class="equip-stat"><div class="l">Potência</div><div class="v">{{ "%.1f"|format(solar.quantidade_kw_inversor_utilizada) }} kW</div></div>
+          <div class="equip-stat"><div class="l">Quantidade</div><div class="v">{{ solar.qtd_inversores }} un.</div></div>
+        </div>
+      </div>
+      <div class="equip-card">
+        <div class="tag">Kit Elétrico</div>
+        <div class="title">Completo</div>
+        <div class="subtitle">{{ kit_eletrico_desc }}</div>
+        <div class="equip-stats">
+          <div class="equip-stat"><div class="l">Quantidade</div><div class="v">1 kit</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="section-title"><span class="icon">&#128203;</span><h2>Itens do Orçamento</h2></div>
+  <table class="itens">
+    <tr><th>Descrição</th><th>Tipo</th><th class="num">Qtd.</th><th class="num">Custo Unit.</th><th class="num">Total</th></tr>
+    {% for item in itens %}
+    <tr>
+      <td>{{ item.descricao }}</td>
+      <td>{{ item.tipo_item.value }}</td>
+      <td class="num">{{ item.quantidade }}</td>
+      <td class="num">R$ {{ item.custo_unitario|float|brl(2) }}</td>
+      <td class="num">R$ {{ item.custo_total|float|brl(2) }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+
+  <div class="section-title"><span class="icon">&#8505;</span><h2>Investimento</h2></div>
+  <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+    <div>
+      <div class="muted" style="font-size:8.5px; text-transform:uppercase; font-weight:bold;">Investimento Total</div>
+      <div style="font-size:24px; font-weight:bold; color:#f2f2f2;">R$ {{ preco_final|brl }}</div>
+    </div>
+    {% if financeiro %}
+    <span class="badge" style="background:#EFA809; color:#1a1200; border:none;">Payback ~{{ "%.1f"|format(financeiro.payback_anos) }} anos</span>
+    {% endif %}
+  </div>
+
+  <div class="footer">
+    <div>JMT SOLAR · Proposta #{{ budget.numero_proposta }} · {{ budget.created_at.strftime("%d/%m/%Y") }}</div>
+    <div class="valido">Válido por {{ budget.validade_dias }} dias</div>
+  </div>
+</div>
+
+{# ============================ PÁGINA 3 — ANÁLISE DE RETORNO (só sistema_completo) ============================ #}
+{% if financeiro %}
+<div class="page">
+  <div class="topbar">
+    <span class="brand gold">JMT SOLAR</span>
+    <span class="muted">Proposta #{{ budget.numero_proposta }} · {{ budget.created_at.strftime("%d/%m/%Y") }}</span>
+  </div>
+
+  <div class="section-title"><span class="icon">&#128202;</span><h2>Análise de Retorno do Investimento</h2></div>
+  <div class="grid-4">
+    <div class="kpi-gold"><div class="l">Economia Mensal</div><div class="v">R$ {{ financeiro.economia_mensal|brl }}</div></div>
+    <div class="kpi-gold"><div class="l">Economia Anual</div><div class="v">R$ {{ financeiro.economia_anual|brl }}</div></div>
+    <div class="kpi-gold"><div class="l">Retorno em 25 anos</div><div class="v">R$ {{ financeiro.retorno_25anos|brl }}</div></div>
+    <div class="kpi-gold"><div class="l">ROI Total</div><div class="v">{{ "%.0f"|format(financeiro.roi_pct) }}%</div></div>
+  </div>
+
+  <div class="grid-2" style="margin-top:14px;">
+    <div class="card">
+      <div style="font-size:9.5px; font-weight:bold; color:#ddd; margin-bottom:6px;">&#9989; ECONOMIA ACUMULADA (25 ANOS)</div>
+      <div class="bars">
+        {% for b in financeiro.bar_chart %}
+        <div class="bar-col">
+          <div class="bar-value">{{ b.valor|k }}</div>
+          <div class="bar" style="height: {{ b.altura_pct }}%;"></div>
+          <div class="bar-label">{{ b.label }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-size:9.5px; font-weight:bold; color:#ddd; margin-bottom:6px;">&#128176; ROI DO INVESTIMENTO</div>
+      <div class="donut-wrap">
+        <div class="donut" style="background: conic-gradient(#EFA809 0% {{ financeiro.roi_pct_clamped }}%, #2a2a2a {{ financeiro.roi_pct_clamped }}% 100%);">
+          <div class="hole gold">{{ "%.0f"|format(financeiro.roi_pct) }}%</div>
+        </div>
+        <div style="margin-top:8px; font-size:11px; font-weight:bold; color:#EFA809;">R$ {{ financeiro.retorno_25anos|brl }}</div>
+        <div style="font-size:8px; color:#8a8a8a;">ECONOMIA TOTAL EM 25 ANOS</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:16px;"><span class="icon">&#128200;</span><h2>Evolução da Economia Anual</h2></div>
+  <div class="card">
+    <div class="line-chart">
+      <div class="line-area" style="clip-path: polygon({{ financeiro.linha_poligono_area }});"></div>
+      {% for p in financeiro.linha_pontos %}
+        {% if loop.index0 % 6 == 0 or loop.last %}
+        <div class="line-dot" style="left:{{ p.x_pct }}%; top:{{ p.y_pct }}%;"></div>
+        {% endif %}
+      {% endfor %}
+    </div>
+    <div class="line-labels">
+      {% for l in financeiro.linha_labels %}<span>{{ l }}</span>{% endfor %}
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:14px;">
+    <div class="card compare-card">
+      <div class="emoji">&#128561;</div>
+      <div class="l">SEM SOLAR (25 ANOS)</div>
+      <div class="v bad">R$ {{ financeiro.sem_solar_25anos|brl }}</div>
+      <div class="l">Gasto com energia</div>
+    </div>
+    <div class="card compare-card">
+      <div class="emoji">&#128526;</div>
+      <div class="l">COM SOLAR (25 ANOS)</div>
+      <div class="v good">R$ {{ financeiro.com_solar|brl }}</div>
+      <div class="l">Investimento único</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div>JMT SOLAR · Proposta #{{ budget.numero_proposta }} · {{ budget.created_at.strftime("%d/%m/%Y") }}</div>
+    <div class="valido">Válido por {{ budget.validade_dias }} dias</div>
+  </div>
+</div>
+{% endif %}
+
+{# ============================ PÁGINA 4 — GARANTIAS/CONDIÇÕES/PROJEÇÃO/OBSERVAÇÕES ============================ #}
+<div class="page">
+  <div class="topbar">
+    <span class="brand gold">JMT SOLAR</span>
+    <span class="muted">Proposta #{{ budget.numero_proposta }} · {{ budget.created_at.strftime("%d/%m/%Y") }}</span>
+  </div>
+
+  <div class="section-title"><span class="icon">&#128737;</span><h2>Garantias e Certificações</h2></div>
+  <div class="grid-2">
+    <div class="card warranty-card"><div><div class="t">25 anos</div><div class="d">Garantia de desempenho dos painéis (mín. 80%)</div></div></div>
+    <div class="card warranty-card"><div><div class="t">10 anos</div><div class="d">Garantia de produto nos painéis</div></div></div>
+  </div>
+  <div class="grid-2" style="margin-top:10px;">
+    <div class="card warranty-card"><div><div class="t">10 anos</div><div class="d">Garantia do inversor contra defeitos</div></div></div>
+    <div class="card warranty-card"><div><div class="t">1 ano</div><div class="d">Garantia na instalação e mão de obra</div></div></div>
+  </div>
+  <div class="grid-2" style="margin-top:10px;">
+    <div class="card warranty-card"><div><div class="t">Incluso</div><div class="d">Homologação e conexão na distribuidora</div></div></div>
+    <div class="card warranty-card"><div><div class="t">App</div><div class="d">Monitoramento remoto via aplicativo</div></div></div>
+  </div>
+
+  <div class="section-title"><span class="icon">&#128196;</span><h2>Condições Comerciais</h2></div>
+  <div class="card">
+    <table class="kv">
+      <tr><td class="k">Validade</td><td class="v">{{ budget.validade_dias }} dias a partir de {{ budget.created_at.strftime("%d/%m/%Y") }}</td></tr>
+      <tr><td class="k">Forma de pagamento</td><td class="v">À vista ou financiamento em até 120x</td></tr>
+      <tr><td class="k">Prazo de instalação</td><td class="v">15 a 30 dias úteis após aprovação</td></tr>
+      {% if solar %}<tr><td class="k">Homologação</td><td class="v">Inclusa — {{ solar.distribuidora }}</td></tr>{% endif %}
+      <tr><td class="k">Monitoramento</td><td class="v">App do fabricante do inversor</td></tr>
+    </table>
+  </div>
+
+  {% if financeiro %}
+  <div class="section-title"><span class="icon">&#128161;</span><h2>Projeção Financeira</h2></div>
+  <table class="proj">
+    <tr><th>Ano</th><th>Economia Anual</th><th>Economia Acumulada</th><th>Status</th></tr>
+    {% for row in financeiro.projecao %}
+    <tr>
+      <td>{{ row.ano }}º ano</td>
+      <td>R$ {{ row.economia_anual|brl }}</td>
+      <td class="{% if row.status == 'Lucro' %}status-lucro{% endif %}">R$ {{ row.economia_acumulada|brl }}</td>
+      <td class="{% if row.status == 'Lucro' %}status-lucro{% else %}status-pagando{% endif %}">
+        <span class="dot {% if row.status == 'Lucro' %}dot-gold{% else %}dot-red{% endif %}"></span>{{ row.status }}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  <div class="note"><b>Nota:</b> Projeção considerando reajuste energético de 8% ao ano (média histórica ANEEL). Valores em reais correntes.</div>
+  {% endif %}
+
+  <div class="section-title"><span class="icon">&#128221;</span><h2>Observações</h2></div>
+  <div class="obs-box">{{ budget.observacoes or "" }}</div>
+
+  <div class="accept-box">ACEITE DO CLIENTE</div>
+
+  <div class="footer">
+    <div>JMT SOLAR · Proposta #{{ budget.numero_proposta }} · {{ budget.created_at.strftime("%d/%m/%Y") }}</div>
+    <div class="valido">Válido por {{ budget.validade_dias }} dias</div>
+  </div>
+</div>
+
+</body>
+</html>

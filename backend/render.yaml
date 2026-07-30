@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: jmt-solar-backend
+    runtime: python
+    plan: free
+    rootDir: backend
+    # WeasyPrint precisa das bibliotecas nativas Pango/Cairo/GDK-Pixbuf/GObject em runtime.
+    buildCommand: >
+      apt-get update &&
+      apt-get install -y --no-install-recommends libpango-1.0-0 libpangocairo-1.0-0 libcairo2
+      libgdk-pixbuf2.0-0 libffi-dev shared-mime-info &&
+      pip install --upgrade pip &&
+      pip install -r requirements.txt
+    startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false # aponte para o Postgres do Supabase (Session Pooler ou conexão direta)
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_EXPIRE_MINUTES
+        value: "1440"
+      - key: FRONTEND_ORIGIN
+        sync: false # domínio exato do frontend publicado (Vercel/Netlify), sem barra final
+      - key: SEED_DEFAULT_PASSWORD
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.12.0"

@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  /* No celular tudo fica pequeno/apertado com o mesmo root de 16px do desktop — como a
+     maioria das classes do Tailwind (texto, padding, gap, tamanhos) usa rem, aumentar o
+     root aqui escala texto + espaçamento + área de toque de uma vez só, sem editar
+     componente por componente. Fica só abaixo do breakpoint `lg` (onde vira a sidebar
+     de desktop). */
+  @media (max-width: 1023px) {
+    html {
+      font-size: 18px;
+    }
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display font-bold text-foreground;
+  }
+
+  ::selection {
+    @apply bg-primary/30 text-foreground;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0a0a0a;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #2a2a2e;
+    border-radius: 8px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3a3a40;
+  }
+
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-surface border border-border rounded-lg relative overflow-hidden;
+  }
+
+  .card-gold-top::before {
+    content: '';
+    @apply absolute top-0 left-0 right-0 h-[3px] bg-primary;
+  }
+
+  .field-label {
+    @apply text-xs font-semibold uppercase tracking-wider text-muted-foreground;
+  }
+
+  .field-input {
+    @apply w-full bg-secondary border border-border rounded-md px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary transition-colors font-body placeholder:text-muted-foreground/60;
+  }
+
+  .field-select {
+    @apply field-input cursor-pointer;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-black transition-colors hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-md bg-secondary border border-border px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:border-primary/60 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-secondary;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-md bg-danger/10 border border-danger/40 px-4 py-2.5 text-sm font-semibold text-danger transition-colors hover:bg-danger/20;
+  }
+}
