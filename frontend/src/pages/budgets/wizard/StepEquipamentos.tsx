@@ -4,7 +4,6 @@ import type { CalcPreviewResponse, Product, SolarConfigInput } from '../../../ty
 import { Card } from '../../../components/Card';
 import { CardPicker } from '../../../components/CardPicker';
 import { Input } from '../../../components/Input';
-import { Select } from '../../../components/Select';
 import { Spinner } from '../../../components/Spinner';
 import { useDebounce } from '../../../lib/useDebounce';
 import { formatNumber } from '../../../lib/format';
@@ -161,39 +160,44 @@ export function StepEquipamentos({
       </Card>
 
       <Card title="Equipamentos — Inversores" subtitle="Quantidade sugerida conforme a potência do sistema.">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="sm:col-span-2">
-            <Select
-              label="Inversor"
-              required
-              value={value.inversor_product_id ?? ''}
-              onChange={(e) => onChange({ inversor_product_id: Number(e.target.value) })}
-            >
-              <option value="" disabled>
-                Selecione um inversor ativo...
-              </option>
-              {inversores.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nome} {p.modelo ? `— ${p.modelo}` : ''}
-                </option>
-              ))}
-            </Select>
+        <div className="space-y-4">
+          <div>
+            <p className="field-label mb-2">
+              Inversor<span className="text-primary"> *</span>
+            </p>
+            <CardPicker
+              emptyLabel="Nenhum inversor ativo cadastrado."
+              value={value.inversor_product_id}
+              options={inversores.map((p) => {
+                const specs = p.specs as Record<string, unknown>;
+                const quantidadeKw = specs?.quantidade_kw as number | undefined;
+                return {
+                  id: p.id,
+                  title: p.nome,
+                  subtitle: p.modelo ?? undefined,
+                  highlight: quantidadeKw ? `${formatNumber(quantidadeKw, 1)} kW` : undefined,
+                };
+              })}
+              onChange={(id) => onChange({ inversor_product_id: id })}
+            />
           </div>
-          <Input
-            label="Quantidade de inversores"
-            type="number"
-            value={value.qtd_inversores_override ?? ''}
-            onChange={(e) => onChange({ qtd_inversores_override: Number(e.target.value) })}
-            hint={preview?.qtd_inversores != null ? `Sugestão automática: ${preview.qtd_inversores}` : undefined}
-          />
-          <Input
-            label="Custo unitário do inversor"
-            type="number"
-            suffix="R$"
-            required
-            value={value.custo_unitario_inversor ?? ''}
-            onChange={(e) => onChange({ custo_unitario_inversor: Number(e.target.value) })}
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Quantidade de inversores"
+              type="number"
+              value={value.qtd_inversores_override ?? ''}
+              onChange={(e) => onChange({ qtd_inversores_override: Number(e.target.value) })}
+              hint={preview?.qtd_inversores != null ? `Sugestão automática: ${preview.qtd_inversores}` : undefined}
+            />
+            <Input
+              label="Custo unitário do inversor"
+              type="number"
+              suffix="R$"
+              required
+              value={value.custo_unitario_inversor ?? ''}
+              onChange={(e) => onChange({ custo_unitario_inversor: Number(e.target.value) })}
+            />
+          </div>
         </div>
       </Card>
 

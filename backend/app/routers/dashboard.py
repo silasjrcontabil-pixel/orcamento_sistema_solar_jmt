@@ -82,9 +82,17 @@ def summary(
     for b in budgets:
         por_status[b.status.value] += 1
 
+    confirmados = [b for b in budgets if b.status == OrcamentoStatus.confirmado]
+    cancelados = [b for b in budgets if b.status == OrcamentoStatus.cancelado]
+    ativos = [b for b in budgets if b.status != OrcamentoStatus.cancelado]
+
     return DashboardSummaryOut(
         total_orcamentos=len(budgets),
-        valor_total=sum(_preco_final(b) for b in budgets),
+        valor_total=sum(_preco_final(b) for b in ativos),
+        orcamentos_realizados=len(confirmados),
+        valor_realizado=sum(_preco_final(b) for b in confirmados),
+        orcamentos_nao_realizados=len(cancelados),
+        valor_nao_realizado=sum(_preco_final(b) for b in cancelados),
         por_status=por_status,
         tempo_medio_resposta_dias=_media([_tempo_resposta_dias(b) for b in budgets]),
     )
@@ -137,7 +145,8 @@ def evolucao(
             EvolucaoItemOut(
                 mes=mes_inicio.strftime("%Y-%m"),
                 total_orcamentos=len(do_mes),
-                valor_total=sum(_preco_final(b) for b in do_mes),
+                # Mesmo critério do /summary: cancelado não é venda, não entra no valor.
+                valor_total=sum(_preco_final(b) for b in do_mes if b.status != OrcamentoStatus.cancelado),
             )
         )
     return result

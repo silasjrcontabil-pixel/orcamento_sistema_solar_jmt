@@ -402,6 +402,10 @@ export interface UserInput {
 export interface DashboardSummary {
   total_orcamentos: number;
   valor_total: number;
+  orcamentos_realizados: number;
+  valor_realizado: number;
+  orcamentos_nao_realizados: number;
+  valor_nao_realizado: number;
   por_status: Partial<Record<OrcamentoStatus, number>>;
   tempo_medio_resposta_dias: number | null;
 }

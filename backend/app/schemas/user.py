@@ -1,7 +1,8 @@
-from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field
+
+from app.schemas.common import UTCDateTime
 
 
 class UserCreate(BaseModel):
@@ -16,6 +17,6 @@ class UserOut(BaseModel):
     nome: str
     username: str
     ativo: bool
-    created_at: datetime
+    created_at: UTCDateTime
 
     model_config = {"from_attributes": True}

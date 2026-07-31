@@ -1,9 +1,9 @@
-from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
 from app.enums import TipoResidencia
+from app.schemas.common import UTCDateTime
 
 
 class ClientCreate(BaseModel):
@@ -37,7 +37,7 @@ class ClientOut(BaseModel):
     endereco: str
     tipo_residencia: TipoResidencia
     created_by: int
-    created_at: datetime
-    updated_at: datetime
+    created_at: UTCDateTime
+    updated_at: UTCDateTime
 
     model_config = {"from_attributes": True}

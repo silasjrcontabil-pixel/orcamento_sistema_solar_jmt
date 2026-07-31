@@ -140,12 +140,31 @@ export function Dashboard() {
           {/* Stat tiles */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatBox label="Total de orçamentos" value={formatNumber(summary?.total_orcamentos)} />
-            <StatBox label="Valor total" value={formatCurrency(summary?.valor_total)} />
+            <StatBox
+              label="Valor total"
+              value={formatCurrency(summary?.valor_total)}
+              hint="Não conta orçamentos cancelados"
+            />
             <StatBox label="Taxa de conversão" value={formatNumber(taxaConversaoGeral, 1)} suffix="%" />
             <StatBox
               label="Tempo médio de resposta"
               value={formatNumber(summary?.tempo_medio_resposta_dias ?? 0, 1)}
               suffix="dias"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <StatBox
+              label="Orçamentos realizados"
+              value={formatCurrency(summary?.valor_realizado)}
+              valueClassName="text-success"
+              hint={`${formatNumber(summary?.orcamentos_realizados)} orçamento(s) confirmado(s)`}
+            />
+            <StatBox
+              label="Orçamentos não realizados"
+              value={formatCurrency(summary?.valor_nao_realizado)}
+              valueClassName="text-danger"
+              hint={`${formatNumber(summary?.orcamentos_nao_realizados)} orçamento(s) cancelado(s)`}
             />
           </div>
 

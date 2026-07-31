@@ -138,8 +138,11 @@ tests/               # pytest (solar_calc)
 - Não há distinção de papel/role entre usuários: qualquer vendedor pode ver, editar e
   alterar o status de orçamento de outro vendedor. Edições (`PUT`) ficam registradas em
   `budget_edit_history` para auditoria de quem alterou.
-- Cadastro de produto não exige nenhum campo preenchido além de `tipo` — o resto é
-  preenchido depois ou fica com fallback (ver `routers/products.py::_resolve_nome`).
+- Cadastro de produto não exige campos secundários (marca, modelo, dimensões) além de
+  `tipo` — mas `nome` e o campo usado no dimensionamento do orçamento (`potencia_wp` no
+  painel, `quantidade_kw` no inversor) continuam obrigatórios, senão o orçamento quebra na
+  hora de calcular (ver `routers/products.py::_resolve_nome` para o fallback de `nome` do
+  tipo `outro`, que não entra no dimensionamento).
 
 ## Decisões de design não 100% explícitas no contrato
 

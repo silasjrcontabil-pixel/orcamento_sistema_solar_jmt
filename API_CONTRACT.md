@@ -56,15 +56,16 @@ Sem distinção de papel/role — qualquer usuário autenticado pode listar/cria
 
 - `GET /api/products?tipo=&status=` → lista
 - `POST /api/products` / `GET /api/products/{id}` / `PUT /api/products/{id}`
-- Body varia por `tipo` (discriminador, único campo realmente obrigatório) — nenhum outro
-  campo é obrigatório no preenchimento (pedido explícito: cadastro rápido sem bloquear no
-  formulário). `nome`, se omitido/vazio, recebe um fallback no backend (modelo/marca
-  informados, ou um rótulo padrão do tipo, ex. "Painel Solar") já que a coluna é NOT NULL.
-  `status` tem default `ativo` se omitido.
-  - `painel_solar`: `nome?, modelo?, marca?, status?, composicao_estrutura?, potencia_wp?,
-    altura?, largura?, peso?`.
-  - `inversor`: `nome?, modelo?, marca?, status?, quantidade_kw?`.
-  - `outro`: `nome?, marca?, status?, modelo?, ano_fabricacao?`.
+- Body varia por `tipo` (validação server-side). Campos secundários (marca, modelo,
+  dimensões, ano de fabricação) são opcionais — cadastro rápido sem bloquear no formulário —
+  mas `nome` e o campo usado pelo motor de dimensionamento do orçamento continuam
+  obrigatórios em `painel_solar`/`inversor`: sem eles, `_dimensionar` não calcula e o
+  orçamento quebra com 422 ao gerar a proposta. `status` tem default `ativo` se omitido.
+  - `painel_solar`: obrigatórios `nome, potencia_wp`; opcionais `modelo, marca, status,
+    composicao_estrutura, altura, largura, peso`.
+  - `inversor`: obrigatórios `nome, quantidade_kw`; opcionais `modelo, marca, status`.
+  - `outro`: não entra no dimensionamento — `nome?, marca?, status?, modelo?,
+    ano_fabricacao?` (todos opcionais; `nome` vazio recebe fallback "Produto").
 - Sem DELETE — só `status=desativado` (produto desativado não aparece nos seletores de
   orçamento novo, mas segue existindo em orçamentos já criados).
 

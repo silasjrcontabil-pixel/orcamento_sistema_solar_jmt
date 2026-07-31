@@ -1,9 +1,9 @@
-from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field, model_validator
 
 from app.enums import OrcamentoStatus, Orientacao, TipoItem, TipoOrcamento, TipoTelhado
+from app.schemas.common import UTCDateTime
 
 
 class BudgetItemIn(BaseModel):
@@ -114,7 +114,7 @@ class StatusHistoryOut(BaseModel):
     status_novo: OrcamentoStatus
     changed_by: int
     changed_by_nome: str
-    changed_at: datetime
+    changed_at: UTCDateTime
 
     model_config = {"from_attributes": True}
 
@@ -122,7 +122,7 @@ class StatusHistoryOut(BaseModel):
 class EditHistoryOut(BaseModel):
     edited_by: int
     edited_by_nome: str
-    edited_at: datetime
+    edited_at: UTCDateTime
 
     model_config = {"from_attributes": True}
 
@@ -134,7 +134,7 @@ class BudgetListItemOut(BaseModel):
     vendedor_nome: str
     status: OrcamentoStatus
     valor_final: float
-    created_at: datetime
+    created_at: UTCDateTime
 
 
 class ClientMiniOut(BaseModel):
@@ -173,5 +173,5 @@ class BudgetDetailOut(BaseModel):
     preco_final: float
     status_history: list[StatusHistoryOut]
     edit_history: list[EditHistoryOut]
-    created_at: datetime
-    updated_at: datetime
+    created_at: UTCDateTime
+    updated_at: UTCDateTime

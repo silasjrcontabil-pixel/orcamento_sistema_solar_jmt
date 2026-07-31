@@ -145,7 +145,12 @@ export function ProductForm() {
               </Select>
             </div>
 
-            <Input label="Nome" value={form.nome} onChange={(e) => update('nome', e.target.value)} />
+            <Input
+              label="Nome"
+              required={form.tipo !== 'outro'}
+              value={form.nome}
+              onChange={(e) => update('nome', e.target.value)}
+            />
 
             {form.tipo !== 'outro' && (
               <Input
@@ -182,6 +187,7 @@ export function ProductForm() {
                 </div>
                 <Input
                   label="Potência"
+                  required
                   type="number"
                   step="0.01"
                   suffix="Wp"
@@ -218,6 +224,7 @@ export function ProductForm() {
             {form.tipo === 'inversor' && (
               <Input
                 label="Quantidade de kW"
+                required
                 type="number"
                 step="0.01"
                 suffix="kW"

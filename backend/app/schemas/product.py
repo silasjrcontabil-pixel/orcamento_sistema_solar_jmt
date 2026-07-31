@@ -1,14 +1,18 @@
 """Schemas de produto — request validado por discriminated union sobre `tipo`.
 
-Nenhum campo além de `tipo` é obrigatório no preenchimento (pedido explícito: cadastro
-rápido sem bloquear no formulário) — `nome`/`status` recebem um valor resolvido pelo
-router (`_resolve_nome`) quando vierem vazios, já que a coluna `nome` é NOT NULL no banco."""
-from datetime import datetime
+Cadastro rápido sem bloquear no formulário com campos secundários (marca, modelo,
+dimensões, ano de fabricação) — mas `nome` e o campo usado pelo motor de dimensionamento do
+orçamento (`potencia_wp` no painel, `quantidade_kw` no inversor) continuam obrigatórios:
+sem eles, `_dimensionar` (routers/budgets.py) não tem como calcular e o orçamento quebra
+com 422 na hora de gerar a proposta. Para `outro` (não entra no dimensionamento), tudo
+opcional além de `tipo` — `_resolve_nome` no router cobre o fallback quando `nome` vier
+vazio."""
 from typing import Annotated, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
 from app.enums import ProdutoStatus, ProdutoTipo
+from app.schemas.common import UTCDateTime
 
 # Campos que compõem `specs` (JSONB) por tipo de produto.
 _PAINEL_SPEC_FIELDS = ("composicao_estrutura", "potencia_wp", "altura", "largura", "peso")
@@ -18,12 +22,12 @@ _OUTRO_SPEC_FIELDS = ("ano_fabricacao",)
 
 class PainelSolarIn(BaseModel):
     tipo: Literal[ProdutoTipo.painel_solar]
-    nome: Optional[str] = None
+    nome: str = Field(min_length=1)
     modelo: Optional[str] = None
     marca: Optional[str] = None
     status: ProdutoStatus = ProdutoStatus.ativo
     composicao_estrutura: Optional[str] = None
-    potencia_wp: Optional[float] = Field(default=None, gt=0)
+    potencia_wp: float = Field(gt=0)
     altura: Optional[float] = None
     largura: Optional[float] = None
     peso: Optional[float] = None
@@ -34,11 +38,11 @@ class PainelSolarIn(BaseModel):
 
 class InversorIn(BaseModel):
     tipo: Literal[ProdutoTipo.inversor]
-    nome: Optional[str] = None
+    nome: str = Field(min_length=1)
     modelo: Optional[str] = None
     marca: Optional[str] = None
     status: ProdutoStatus = ProdutoStatus.ativo
-    quantidade_kw: Optional[float] = Field(default=None, gt=0)
+    quantidade_kw: float = Field(gt=0)
 
     def to_specs(self) -> dict:
         return {k: getattr(self, k) for k in _INVERSOR_SPEC_FIELDS}
@@ -68,7 +72,7 @@ class ProductOut(BaseModel):
     marca: Optional[str]
     status: ProdutoStatus
     specs: dict
-    created_at: datetime
-    updated_at: datetime
+    created_at: UTCDateTime
+    updated_at: UTCDateTime
 
     model_config = {"from_attributes": True}

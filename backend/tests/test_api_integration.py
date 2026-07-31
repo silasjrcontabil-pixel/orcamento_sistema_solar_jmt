@@ -72,13 +72,33 @@ def inversor_product(client, auth_headers):
     return resp.json()
 
 
-def test_criar_produto_painel_sem_campos_opcionais_usa_fallback(client, auth_headers):
-    # Nenhum campo além de `tipo` é obrigatório no cadastro — falta nome/modelo/composição/potência.
-    resp = client.post("/api/products", headers=auth_headers, json={"tipo": "painel_solar"})
+def test_criar_produto_painel_sem_campos_secundarios_usa_fallback(client, auth_headers):
+    # Campos secundários (modelo/marca/composição/dimensões) são opcionais — só nome e
+    # potencia_wp continuam obrigatórios (motor de dimensionamento do orçamento depende deles).
+    resp = client.post(
+        "/api/products", headers=auth_headers, json={"tipo": "painel_solar", "nome": "X", "potencia_wp": 550}
+    )
     assert resp.status_code == 201, resp.text
     body = resp.json()
-    assert body["nome"] == "Painel Solar"
-    assert body["specs"]["potencia_wp"] is None
+    assert body["specs"]["potencia_wp"] == 550
+    assert body["specs"]["composicao_estrutura"] is None
+
+
+def test_criar_produto_painel_sem_potencia_falha(client, auth_headers):
+    resp = client.post("/api/products", headers=auth_headers, json={"tipo": "painel_solar", "nome": "X"})
+    assert resp.status_code == 422
+
+
+def test_criar_produto_inversor_sem_quantidade_kw_falha(client, auth_headers):
+    resp = client.post("/api/products", headers=auth_headers, json={"tipo": "inversor", "nome": "X"})
+    assert resp.status_code == 422
+
+
+def test_criar_produto_outro_sem_nenhum_campo_usa_fallback(client, auth_headers):
+    # tipo "outro" não entra no motor de dimensionamento — continua sem exigir nada além de `tipo`.
+    resp = client.post("/api/products", headers=auth_headers, json={"tipo": "outro"})
+    assert resp.status_code == 201, resp.text
+    assert resp.json()["nome"] == "Produto"
 
 
 @pytest.fixture()
