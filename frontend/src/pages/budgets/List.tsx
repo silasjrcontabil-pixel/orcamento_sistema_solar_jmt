@@ -120,6 +120,7 @@ export function BudgetsList() {
                   <th className="py-3 pr-4 font-semibold">Cliente</th>
                   <th className="py-3 pr-4 font-semibold">Vendedor</th>
                   <th className="py-3 pr-4 font-semibold">Status</th>
+                  <th className="py-3 pr-4 font-semibold">Dias parado</th>
                   <th className="py-3 pr-4 font-semibold">Valor final</th>
                   <th className="py-3 pr-4 font-semibold">Criado em</th>
                   <th className="py-3 pr-6 font-semibold text-right">Ações</th>
@@ -133,6 +134,9 @@ export function BudgetsList() {
                     <td className="py-3 pr-4 text-muted-foreground">{b.vendedor_nome}</td>
                     <td className="py-3 pr-4">
                       <StatusBadge status={b.status} />
+                    </td>
+                    <td className="py-3 pr-4 text-muted-foreground">
+                      {b.dias_parado === null ? '—' : b.dias_parado === 0 ? 'Hoje' : `${b.dias_parado} dias`}
                     </td>
                     <td className="py-3 pr-4 font-semibold text-primary">{formatCurrency(b.valor_final)}</td>
                     <td className="py-3 pr-4 text-muted-foreground">{formatDate(b.created_at)}</td>

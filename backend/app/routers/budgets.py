@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
@@ -34,6 +34,30 @@ from app.security import get_current_user
 from app.services import solar_calc
 
 router = APIRouter(prefix="/api/budgets", tags=["budgets"])
+
+# Ordem de exibição da listagem: o que precisa de ação (aguardando resposta do cliente,
+# enviado, ainda em rascunho) aparece antes do que já foi resolvido (confirmado/cancelado).
+_STATUS_LIST_PRIORITY = {
+    OrcamentoStatus.aguardando_resposta: 0,
+    OrcamentoStatus.enviado: 1,
+    OrcamentoStatus.rascunho: 2,
+    OrcamentoStatus.confirmado: 3,
+    OrcamentoStatus.cancelado: 4,
+}
+
+# Status finais: não faz sentido mostrar "dias parado" pra eles (não estão mais esperando
+# nada, o número congelado no momento do fechamento não ajuda a priorizar follow-up).
+_STATUS_FINAIS = {OrcamentoStatus.confirmado, OrcamentoStatus.cancelado}
+
+
+def _dias_parado(budget: Budget) -> Optional[int]:
+    if budget.status in _STATUS_FINAIS:
+        return None
+    historico = sorted(budget.status_history, key=lambda h: h.changed_at)
+    referencia = historico[-1].changed_at if historico else budget.created_at
+    if referencia.tzinfo is None:
+        referencia = referencia.replace(tzinfo=timezone.utc)
+    return (datetime.now(timezone.utc) - referencia).days
 
 
 # ---------------------------------------------------------------------------
@@ -296,7 +320,10 @@ def list_budgets(
     current_user: User = Depends(get_current_user),
 ):
     stmt = select(Budget).options(
-        selectinload(Budget.client), selectinload(Budget.vendedor), selectinload(Budget.itens)
+        selectinload(Budget.client),
+        selectinload(Budget.vendedor),
+        selectinload(Budget.itens),
+        selectinload(Budget.status_history),
     )
     if vendedor_id:
         stmt = stmt.where(Budget.vendedor_id == vendedor_id)
@@ -308,9 +335,12 @@ def list_budgets(
         stmt = stmt.where(Budget.created_at >= datetime.combine(data_inicio, datetime.min.time()))
     if data_fim:
         stmt = stmt.where(Budget.created_at <= datetime.combine(data_fim, datetime.max.time()))
+    # Ordena por prioridade de status (aguardando resposta > enviado > rascunho > confirmado
+    # > cancelado) e, dentro do mesmo status, pelo mais recente primeiro.
     stmt = stmt.order_by(Budget.created_at.desc())
 
     budgets = db.scalars(stmt).all()
+    budgets = sorted(budgets, key=lambda b: _STATUS_LIST_PRIORITY[b.status])
     result = []
     for b in budgets:
         itens_dicts = [{"quantidade": i.quantidade, "custo_unitario": i.custo_unitario} for i in b.itens]
@@ -323,6 +353,7 @@ def list_budgets(
                 vendedor_nome=b.vendedor.nome,
                 status=b.status,
                 valor_final=preco_final,
+                dias_parado=_dias_parado(b),
                 created_at=b.created_at,
             )
         )

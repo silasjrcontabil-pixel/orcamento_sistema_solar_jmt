@@ -134,6 +134,9 @@ class BudgetListItemOut(BaseModel):
     vendedor_nome: str
     status: OrcamentoStatus
     valor_final: float
+    # Dias desde a última mudança de status — None para status finais (confirmado/cancelado),
+    # onde não faz sentido medir "tempo parado esperando algo".
+    dias_parado: Optional[int]
     created_at: UTCDateTime
 
 

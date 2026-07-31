@@ -292,6 +292,7 @@ export interface BudgetListItem {
   vendedor_nome: string;
   status: OrcamentoStatus;
   valor_final: number;
+  dias_parado: number | null;
   created_at: string;
 }
 
