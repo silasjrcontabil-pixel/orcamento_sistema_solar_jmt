@@ -393,6 +393,12 @@ def update_budget_status(
     current_user: User = Depends(get_current_user),
 ):
     budget = _load_budget_full(db, budget_id)
+    if budget.vendedor_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Você só pode alterar o status dos orçamentos dos quais é o vendedor.",
+        )
+
     permitido = ALLOWED_STATUS_TRANSITIONS.get(budget.status, set())
     if payload.status not in permitido:
         raise HTTPException(
