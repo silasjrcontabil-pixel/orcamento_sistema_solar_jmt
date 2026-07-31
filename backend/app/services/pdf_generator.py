@@ -20,7 +20,7 @@ from typing import Optional
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from app.enums import TipoItem, TipoOrcamento
+from app.enums import TipoOrcamento
 from app.models.budget import Budget
 
 TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
@@ -92,33 +92,43 @@ def _build_financeiro(valor_conta: float, preco_final: float) -> dict:
     payback_anos = preco_final / economia_anual_base if economia_anual_base else None
     roi_pct = ((retorno_25anos - preco_final) / preco_final * 100) if preco_final else 0
 
+    # Altura em pixels (não percentual): o WeasyPrint resolve mal `width`/`height` percentuais
+    # dentro de itens flex, o que fazia as barras invadirem a coluna vizinha e estourarem a
+    # borda direita do card mesmo antes do ajuste de altura máxima. Calculando a altura em px
+    # de antemão e desenhando as barras como células de uma <table> (table-layout: fixed)
+    # em vez de flexbox, cada coluna recebe uma largura igual e previsível.
+    ALTURA_MAX_BARRA_PX = 90
+
     bar_anos = [1, 5, 10, 15, 20, 25]
     bar_valores = [_economia_acumulada(economia_anual_base, a) for a in bar_anos]
     max_barra = max(bar_valores) if bar_valores else 1
-    ALTURA_MAX_BARRA_PCT = 82  # deixa espaço acima da barra mais alta para o rótulo de valor
     bar_chart = [
         {
             "label": f"{a}º",
             "valor": v,
-            "altura_pct": round((v / max_barra) * ALTURA_MAX_BARRA_PCT, 1) if max_barra else 0,
+            "altura_px": round((v / max_barra) * ALTURA_MAX_BARRA_PX) if max_barra else 0,
         }
         for a, v in zip(bar_anos, bar_valores)
     ]
 
     linha_anos = list(range(1, ANOS_HORIZONTE + 1))
     linha_valores = [_economia_ano(economia_anual_base, a) for a in linha_anos]
-    v_min, v_max = min(linha_valores), max(linha_valores)
-    span = (v_max - v_min) or 1
-    pontos = [
+
+    # Gráfico "Evolução da Economia Anual" simplificado: mesmo estilo de barras do gráfico
+    # anterior (mais fácil de ler que o gráfico de linha/pontos que exibia antes), amostrando
+    # os mesmos anos usados nos rótulos.
+    evolucao_idx = [0, 6, 12, 18, 24]
+    evolucao_anos = [linha_anos[i] for i in evolucao_idx if i < len(linha_anos)]
+    evolucao_valores = [linha_valores[i] for i in evolucao_idx if i < len(linha_anos)]
+    max_evolucao = max(evolucao_valores) if evolucao_valores else 1
+    evolucao_chart = [
         {
-            "x_pct": round((i / (len(linha_anos) - 1)) * 100, 2) if len(linha_anos) > 1 else 0,
-            "y_pct": round(100 - ((v - v_min) / span) * 100, 2),
+            "label": f"{a}º",
+            "valor": v,
+            "altura_px": round((v / max_evolucao) * ALTURA_MAX_BARRA_PX) if max_evolucao else 0,
         }
-        for i, v in enumerate(linha_valores)
+        for a, v in zip(evolucao_anos, evolucao_valores)
     ]
-    poligono_area = "0% 100%, " + ", ".join(f"{p['x_pct']}% {p['y_pct']}%" for p in pontos) + ", 100% 100%"
-    linha_labels_idx = [0, 6, 12, 18, 24]
-    linha_labels = [f"{linha_anos[i]}º" for i in linha_labels_idx if i < len(linha_anos)]
 
     roi_pct_clamped = max(0, min(100, roi_pct))
 
@@ -132,9 +142,7 @@ def _build_financeiro(valor_conta: float, preco_final: float) -> dict:
         "sem_solar_25anos": economia_anual_base * ANOS_HORIZONTE,
         "com_solar": preco_final,
         "bar_chart": bar_chart,
-        "linha_pontos": pontos,
-        "linha_poligono_area": poligono_area,
-        "linha_labels": linha_labels,
+        "evolucao_chart": evolucao_chart,
         "projecao": projecao,
     }
 
@@ -150,11 +158,6 @@ def _build_context(budget: Budget) -> dict:
 
     solar = None
     financeiro = None
-    kit_eletrico_desc = "Cabos, conectores MC4, disjuntores CC/CA e placa de aviso conforme norma"
-
-    parte_ca_item = next((i for i in itens if i.tipo_item == TipoItem.parte_ca), None)
-    if parte_ca_item is not None:
-        kit_eletrico_desc = parte_ca_item.descricao
 
     if budget.tipo_orcamento == TipoOrcamento.sistema_completo and budget.solar_config is not None:
         sc = budget.solar_config
@@ -177,7 +180,6 @@ def _build_context(budget: Budget) -> dict:
                 "nome": painel.nome,
                 "modelo": painel.modelo,
                 "marca": painel.marca,
-                "composicao_estrutura": painel.specs.get("composicao_estrutura"),
             },
             "inversor": {
                 "nome": inversor.nome,
@@ -213,7 +215,6 @@ def _build_context(budget: Budget) -> dict:
         "itens": itens,
         "custo_total": custo_total,
         "preco_final": preco_final,
-        "kit_eletrico_desc": kit_eletrico_desc,
         "logo_data_uri": _logo_data_uri(),
         "capa_bg_data_uri": _capa_bg_data_uri(),
         "gerado_em": datetime.now(),

@@ -13,6 +13,23 @@ from app.security import get_current_user
 
 router = APIRouter(prefix="/api/products", tags=["products"])
 
+_NOME_PADRAO_POR_TIPO = {
+    ProdutoTipo.painel_solar: "Painel Solar",
+    ProdutoTipo.inversor: "Inversor",
+    ProdutoTipo.outro: "Produto",
+}
+
+
+def _resolve_nome(payload) -> str:
+    """`nome` não é mais obrigatório no formulário — resolve um valor não-vazio para a
+    coluna NOT NULL a partir do modelo/marca informados, ou do rótulo do tipo."""
+    if payload.nome and payload.nome.strip():
+        return payload.nome.strip()
+    fallback = getattr(payload, "modelo", None) or getattr(payload, "marca", None)
+    if fallback and fallback.strip():
+        return fallback.strip()
+    return _NOME_PADRAO_POR_TIPO[payload.tipo]
+
 
 @router.get("", response_model=list[ProductOut])
 def list_products(
@@ -36,7 +53,7 @@ def create_product(
 ):
     product = Product(
         tipo=payload.tipo,
-        nome=payload.nome,
+        nome=_resolve_nome(payload),
         modelo=getattr(payload, "modelo", None),
         marca=getattr(payload, "marca", None),
         status=payload.status,
@@ -68,7 +85,7 @@ def update_product(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Produto não encontrado")
 
     product.tipo = payload.tipo
-    product.nome = payload.nome
+    product.nome = _resolve_nome(payload)
     product.modelo = getattr(payload, "modelo", None)
     product.marca = getattr(payload, "marca", None)
     product.status = payload.status

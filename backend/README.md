@@ -41,10 +41,12 @@ alembic upgrade head
 python scripts/seed_users.py
 ```
 
-O seed cria (ou, se já existirem, atualiza a senha de) os 3 usuários sócios com a senha
+O seed cria (ou, se já existirem — casando por `nome` —, atualiza usuário/senha de) os 3
+usuários sócios. Login é sempre o primeiro nome em minúsculas (ex.: `jheferson`), senha
 individual de cada um definida na lista `SOCIOS` em `scripts/seed_users.py` (padrão
 `Nome@1`, ex.: `Jheferson@1`). Editar a senha de alguém na lista e rodar o script de novo
-aplica a troca no banco.
+aplica a troca no banco. Novos vendedores podem ser cadastrados direto pelo portal (aba
+"Vendedores"), sem precisar rodar o script.
 
 ### 4. Subir a API
 
@@ -100,9 +102,9 @@ app/
   security.py        # hash de senha + JWT
   enums.py           # enums compartilhados (models + schemas)
   models/            # SQLAlchemy: users, clients, products, budgets, budget_solar_config,
-                     #   budget_items, budget_status_history
+                     #   budget_items, budget_status_history, budget_edit_history
   schemas/           # Pydantic (request/response), discriminated union de produto por tipo
-  routers/           # auth, geo, clients, products, budgets, dashboard
+  routers/           # auth, geo, clients, products, budgets, dashboard, users
   services/
     reference_data.py # carrega municipios_geo.json + irradiancia.csv, monta cKDTree
     solar_calc.py      # motor de cálculo solar (API_CONTRACT.md)
@@ -126,12 +128,18 @@ tests/               # pytest (solar_calc)
   `rascunho → enviado → aguardando_resposta → confirmado`, e qualquer status pode ir direto
   para `cancelado`. Toda transição grava uma linha em `budget_status_history` (alimenta o
   dashboard de tempo de resposta por vendedor).
-- Margem de lucro padrão 40%, editável por orçamento (`margem_lucro_pct`).
+- Margem de lucro padrão 40%, editável por orçamento (`margem_lucro_pct`). Validade da
+  proposta padrão 7 dias (`validade_dias`).
 - Para `tipo_orcamento=sistema_completo`, o backend gera automaticamente os `budget_items` de
   painel e inversor a partir de `solar_config` (usando `custo_unitario_painel` /
   `custo_unitario_inversor` informados no próprio orçamento — o catálogo de produtos não tem
   preço, conforme regra mestra do briefing). O cliente só adiciona itens extras
   (`parte_ca`, `mao_obra`, `homologacao`, `outro`) na lista `itens`.
+- Não há distinção de papel/role entre usuários: qualquer vendedor pode ver, editar e
+  alterar o status de orçamento de outro vendedor. Edições (`PUT`) ficam registradas em
+  `budget_edit_history` para auditoria de quem alterou.
+- Cadastro de produto não exige nenhum campo preenchido além de `tipo` — o resto é
+  preenchido depois ou fica com fallback (ver `routers/products.py::_resolve_nome`).
 
 ## Decisões de design não 100% explícitas no contrato
 

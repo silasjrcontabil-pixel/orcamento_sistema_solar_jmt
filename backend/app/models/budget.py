@@ -28,7 +28,7 @@ class Budget(Base):
     )
 
     margem_lucro_pct: Mapped[float] = mapped_column(Numeric(6, 2), nullable=False, default=40)
-    validade_dias: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
+    validade_dias: Mapped[int] = mapped_column(Integer, nullable=False, default=7)
     observacoes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -47,4 +47,10 @@ class Budget(Base):
         back_populates="budget",
         cascade="all, delete-orphan",
         order_by="BudgetStatusHistory.changed_at",
+    )
+    edit_history = relationship(
+        "BudgetEditHistory",
+        back_populates="budget",
+        cascade="all, delete-orphan",
+        order_by="BudgetEditHistory.edited_at",
     )

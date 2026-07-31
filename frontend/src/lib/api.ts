@@ -28,6 +28,8 @@ import type {
   Product,
   ProductFilters,
   ProductPayload,
+  UserAccount,
+  UserInput,
 } from '../types';
 
 const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
@@ -197,6 +199,15 @@ export const budgetsApi = {
     request<CalcPreviewResponse>('/budgets/calc-preview', { method: 'POST', body: payload }),
   pdfUrl: (id: number) => `${API_BASE}/api/budgets/${id}/pdf`,
   downloadPdf: (id: number) => request<Blob>(`/budgets/${id}/pdf`, { raw: true }),
+};
+
+// ---------------------------------------------------------------------------
+// Usuários (vendedores)
+// ---------------------------------------------------------------------------
+
+export const usersApi = {
+  list: () => request<UserAccount[]>('/users'),
+  create: (payload: UserInput) => request<UserAccount>('/users', { method: 'POST', body: payload }),
 };
 
 // ---------------------------------------------------------------------------

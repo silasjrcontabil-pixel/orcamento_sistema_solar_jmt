@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.db import get_db
@@ -12,7 +12,10 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 @router.post("/login", response_model=TokenResponse)
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
-    user = db.scalar(select(User).where(User.username == payload.username))
+    # Comparação case-insensitive: username é sempre armazenado em minúsculas (primeiro
+    # nome), mas o login não deve depender de o usuário digitar exatamente em caixa baixa.
+    username_normalizado = payload.username.strip().lower()
+    user = db.scalar(select(User).where(func.lower(User.username) == username_normalizado))
     if user is None or not user.ativo or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuário ou senha inválidos")
 

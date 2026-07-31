@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { budgetsApi } from '../../lib/api';
-import { useAuthStore } from '../../store/auth';
 import type { BudgetDetail as BudgetDetailType, OrcamentoStatus } from '../../types';
 import { ORCAMENTO_STATUS_LABEL, ORCAMENTO_TRANSICOES, TIPO_ITEM } from '../../types';
 import { Card } from '../../components/Card';
@@ -20,7 +19,6 @@ function itemTypeLabel(tipo: string) {
 export function BudgetDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const currentUser = useAuthStore((s) => s.user);
   const [budget, setBudget] = useState<BudgetDetailType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -90,7 +88,6 @@ export function BudgetDetail() {
   if (!budget) return <ErrorBanner message={error ?? 'Orçamento não encontrado.'} />;
 
   const allowedTransitions = ORCAMENTO_TRANSICOES[budget.status];
-  const isOwner = currentUser?.id === budget.vendedor?.id;
 
   return (
     <div className="space-y-6">
@@ -242,6 +239,21 @@ export function BudgetDetail() {
               </ul>
             )}
           </Card>
+
+          {budget.edit_history.length > 0 && (
+            <Card title="Histórico de edições" subtitle="Registro de quem editou este orçamento.">
+              <ul className="space-y-2 text-sm">
+                {budget.edit_history.map((h, i) => (
+                  <li key={i} className="flex items-center justify-between border-b border-border/60 pb-2 last:border-0">
+                    <span>
+                      Editado por <span className="font-semibold text-foreground">{h.edited_by_nome}</span>
+                    </span>
+                    <span className="text-muted-foreground">{formatDateTime(h.edited_at)}</span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
         </div>
 
         <div className="space-y-6">
@@ -269,11 +281,7 @@ export function BudgetDetail() {
           </Card>
 
           <Card title="Alterar status">
-            {!isOwner ? (
-              <p className="text-sm text-muted-foreground">
-                Apenas o vendedor deste orçamento pode alterar o status. Você pode visualizar, mas não alterar.
-              </p>
-            ) : allowedTransitions.length === 0 ? (
+            {allowedTransitions.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 Este orçamento está em um status final e não pode mais ser alterado.
               </p>

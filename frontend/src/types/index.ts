@@ -16,7 +16,16 @@ export type OrcamentoStatus =
   | 'confirmado'
   | 'cancelado';
 export type TipoItem = 'painel' | 'inversor' | 'parte_ca' | 'mao_obra' | 'homologacao' | 'outro';
-export type TipoTelhado = 'Cerâmico (Francês)' | 'Fibrocimento' | 'Metálico' | 'Laje' | 'Solo';
+export type TipoTelhado =
+  | 'Cerâmico (Francês) / Base Metálica'
+  | 'Cerâmico (Francês) / Base Madeira'
+  | 'Fibrocimento / Base Metálica'
+  | 'Fibrocimento / Base Madeira'
+  | 'Mini Trilho / Baixo'
+  | 'Mini Trilho / Alto'
+  | 'Fixação em L / Base Metálica'
+  | 'Solo'
+  | 'Laje';
 export type Orientacao = 'Norte' | 'Nordeste' | 'Noroeste' | 'Leste/Oeste';
 
 export const PRODUTO_TIPOS: { value: ProdutoTipo; label: string }[] = [
@@ -38,11 +47,15 @@ export const TIPO_RESIDENCIA: TipoResidencia[] = [
 ];
 
 export const TIPO_TELHADO: TipoTelhado[] = [
-  'Cerâmico (Francês)',
-  'Fibrocimento',
-  'Metálico',
-  'Laje',
+  'Cerâmico (Francês) / Base Metálica',
+  'Cerâmico (Francês) / Base Madeira',
+  'Fibrocimento / Base Metálica',
+  'Fibrocimento / Base Madeira',
+  'Mini Trilho / Baixo',
+  'Mini Trilho / Alto',
+  'Fixação em L / Base Metálica',
   'Solo',
+  'Laje',
 ];
 
 export const ORIENTACAO: Orientacao[] = ['Norte', 'Nordeste', 'Noroeste', 'Leste/Oeste'];
@@ -290,6 +303,12 @@ export interface BudgetStatusHistoryEntry {
   changed_at: string;
 }
 
+export interface BudgetEditHistoryEntry {
+  edited_by: number;
+  edited_by_nome: string;
+  edited_at: string;
+}
+
 // Projeção reduzida do cliente embutida no detalhe do orçamento (API_CONTRACT.md:
 // GET /api/budgets/{id} não retorna o Client completo, só os campos usados na proposta).
 export interface ClientMini {
@@ -323,6 +342,7 @@ export interface BudgetDetail {
   custo_total: number;
   preco_final: number;
   status_history: BudgetStatusHistoryEntry[];
+  edit_history: BudgetEditHistoryEntry[];
   created_at: string;
   updated_at?: string;
 }
@@ -355,6 +375,24 @@ export interface CalcPreviewResponse {
   radiacao_media_regiao: number;
   radiacao_ajustada: number;
   municipio_fallback_usado: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Usuários (vendedores)
+// ---------------------------------------------------------------------------
+
+export interface UserAccount {
+  id: number;
+  nome: string;
+  username: string;
+  ativo: boolean;
+  created_at: string;
+}
+
+export interface UserInput {
+  nome: string;
+  senha: string;
+  username?: string;
 }
 
 // ---------------------------------------------------------------------------

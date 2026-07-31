@@ -4,7 +4,9 @@ Contrato fechado entre backend (FastAPI) e frontend (React), para os dois lados 
 construídos em paralelo sem depender um do outro. Base URL do backend: `/api`.
 
 Auth: JWT Bearer. Todos os endpoints abaixo (exceto `/api/auth/login`) exigem
-`Authorization: Bearer <token>`. Não há diferenciação de permissões entre os 3 usuários.
+`Authorization: Bearer <token>`. Não há diferenciação de permissões entre usuários — qualquer
+vendedor pode ver, editar e alterar o status de orçamentos de outros vendedores (edições via
+`PUT` ficam registradas em `edit_history`, ver seção Orçamentos).
 
 ## Enums
 
@@ -14,13 +16,27 @@ Auth: JWT Bearer. Todos os endpoints abaixo (exceto `/api/auth/login`) exigem
 - `TipoOrcamento`: `sistema_completo` | `itens_individuais`
 - `OrcamentoStatus`: `rascunho` | `enviado` | `aguardando_resposta` | `confirmado` | `cancelado`
 - `TipoItem`: `painel` | `inversor` | `parte_ca` | `mao_obra` | `homologacao` | `outro`
-- `TipoTelhado`: `Cerâmico (Francês)` | `Fibrocimento` | `Metálico` | `Laje` | `Solo`
+- `TipoTelhado`: `Cerâmico (Francês) / Base Metálica` | `Cerâmico (Francês) / Base Madeira` |
+  `Fibrocimento / Base Metálica` | `Fibrocimento / Base Madeira` | `Mini Trilho / Baixo` |
+  `Mini Trilho / Alto` | `Fixação em L / Base Metálica` | `Solo` | `Laje`
 - `Orientacao`: `Norte` | `Nordeste` | `Noroeste` | `Leste/Oeste`
 
 ## Auth
 
-- `POST /api/auth/login` — body `{username, password}` → `{access_token, token_type: "bearer"}`
+- `POST /api/auth/login` — body `{username, password}` → `{access_token, token_type: "bearer"}`.
+  `username` é comparado case-insensitive (login é sempre o primeiro nome em minúsculas, mas
+  o backend aceita qualquer variação de caixa).
 - `GET /api/auth/me` → `{id, nome, username}`
+
+## Usuários (vendedores)
+
+Sem distinção de papel/role — qualquer usuário autenticado pode listar/criar outros usuários
+(mesmo modelo de permissão do resto da API).
+
+- `GET /api/users` → `[{id, nome, username, ativo, created_at}]`
+- `POST /api/users` — body `{nome, senha, username?}` → `{id, nome, username, ativo, created_at}`.
+  `username` é opcional: se omitido, é derivado do primeiro nome de `nome` em minúsculas (sem
+  acentos), com sufixo numérico se já existir (`ana`, `ana2`, ...).
 
 ## Geo
 
@@ -40,12 +56,15 @@ Auth: JWT Bearer. Todos os endpoints abaixo (exceto `/api/auth/login`) exigem
 
 - `GET /api/products?tipo=&status=` → lista
 - `POST /api/products` / `GET /api/products/{id}` / `PUT /api/products/{id}`
-- Body varia por `tipo` (validação server-side):
-  - `painel_solar`: obrigatórios `nome, modelo, composicao_estrutura, potencia_wp, status`;
-    opcionais `marca, altura, largura, peso`.
-  - `inversor`: obrigatórios `nome, modelo, quantidade_kw, status` (todos os campos listados
-    no briefing são obrigatórios).
-  - `outro`: obrigatórios `nome, marca, status`; opcionais `modelo, ano_fabricacao`.
+- Body varia por `tipo` (discriminador, único campo realmente obrigatório) — nenhum outro
+  campo é obrigatório no preenchimento (pedido explícito: cadastro rápido sem bloquear no
+  formulário). `nome`, se omitido/vazio, recebe um fallback no backend (modelo/marca
+  informados, ou um rótulo padrão do tipo, ex. "Painel Solar") já que a coluna é NOT NULL.
+  `status` tem default `ativo` se omitido.
+  - `painel_solar`: `nome?, modelo?, marca?, status?, composicao_estrutura?, potencia_wp?,
+    altura?, largura?, peso?`.
+  - `inversor`: `nome?, modelo?, marca?, status?, quantidade_kw?`.
+  - `outro`: `nome?, marca?, status?, modelo?, ano_fabricacao?`.
 - Sem DELETE — só `status=desativado` (produto desativado não aparece nos seletores de
   orçamento novo, mas segue existindo em orçamentos já criados).
 
@@ -75,10 +94,14 @@ Auth: JWT Bearer. Todos os endpoints abaixo (exceto `/api/auth/login`) exigem
   }
   ```
 - `GET /api/budgets/{id}` → detalhe completo (cliente, vendedor, solar_config se houver,
-  itens, totais calculados: `custo_total`, `preco_final`, histórico de status resumido)
-- `PUT /api/budgets/{id}` → edita (mesmo shape do POST); recalcula totais
+  itens, totais calculados: `custo_total`, `preco_final`, `status_history`, `edit_history`)
+- `PUT /api/budgets/{id}` → edita (mesmo shape do POST); recalcula totais. Qualquer vendedor
+  pode editar orçamento de outro vendedor — cada edição grava uma linha em
+  `budget_edit_history` (`{edited_by, edited_by_nome, edited_at}`, retornada em
+  `edit_history` no detalhe), permitindo auditar quem alterou o quê.
 - `PATCH /api/budgets/{id}/status` → body `{status}`; transições permitidas:
-  rascunho→enviado→aguardando_resposta→confirmado, e qualquer status→cancelado.
+  rascunho→enviado→aguardando_resposta→confirmado, e qualquer status→cancelado. Qualquer
+  vendedor pode alterar o status de orçamento de outro vendedor (sem restrição de dono).
   Sem endpoint de delete.
 - `POST /api/budgets/calc-preview` → body `{client_id, solar_config: {...como acima}}`
   (client_id é necessário para resolver lat/lon do município do cliente já escolhido no
@@ -126,8 +149,15 @@ Custos (tanto para `sistema_completo` quanto `itens_individuais`):
 
 `GET /api/budgets/{id}/pdf` gera um PDF com 4 seções replicando
 `Dados_Marca_Empresa/Exemplo de Proposta.pdf`: capa (nome do sistema/kWp, investimento,
-retorno, economia/ano), dados do cliente + dimensionamento + equipamentos + investimento,
-análise de retorno (economia mensal/anual, ROI, gráfico de barras de economia acumulada em
-CSS/HTML, gráfico de linha de evolução), garantias/condições comerciais + projeção
-financeira ano a ano + observações. Tema: fundo preto (#0a0a0a / #111), dourado #EFA809
-como cor de destaque, logo em `Dados_Marca_Empresa/Logotipo.jpeg`.
+retorno, economia/ano), dados do cliente + dimensionamento + equipamentos (rótulo fixo
+"Módulo Fotovoltaico"/"Inversor Solar", sem marca; estrutura de fixação mostra o tipo de
+telhado escolhido) + investimento, análise de retorno (economia mensal/anual, ROI, dois
+gráficos de barras — economia acumulada em 25 anos e evolução da economia anual —
+renderizados como `<table>` HTML com altura calculada em pixels no backend, não flexbox: o
+WeasyPrint resolve mal largura/altura percentual dentro de itens flex, o que fazia as barras
+invadirem a coluna vizinha e estourar a borda direita do card), garantias/condições
+comerciais (validade padrão 7 dias, forma de pagamento inclui cartão de crédito em até 21x)
++ projeção financeira ano a ano + observações. Tema: fundo preto (#0a0a0a / #111), dourado
+#EFA809 como cor de destaque, logo em `Dados_Marca_Empresa/Logotipo.jpeg` (capa com fundo
+`background: #0a0a0a` explícito no `.cover-content`, para não depender do tom escuro da foto
+de fundo).

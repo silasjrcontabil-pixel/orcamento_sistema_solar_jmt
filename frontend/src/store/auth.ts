@@ -32,7 +32,9 @@ export const useAuthStore = create<AuthState>()(
       login: async (username: string, password: string) => {
         set({ loading: true, error: null });
         try {
-          const { access_token } = await authApi.login({ username, password });
+          // Login é sempre o primeiro nome em minúsculas — normaliza aqui para o usuário
+          // não precisar acertar a caixa exata (o backend também compara case-insensitive).
+          const { access_token } = await authApi.login({ username: username.trim().toLowerCase(), password });
           set({ token: access_token, isAuthenticated: true, loading: false });
           await get().fetchMe();
         } catch (err) {

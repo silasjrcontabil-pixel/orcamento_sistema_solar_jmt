@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, selectinload
 from app.db import get_db
 from app.enums import ALLOWED_STATUS_TRANSITIONS, OrcamentoStatus, ProdutoTipo, TipoItem, TipoOrcamento
 from app.models.budget import Budget
+from app.models.budget_edit_history import BudgetEditHistory
 from app.models.budget_item import BudgetItem
 from app.models.budget_solar_config import BudgetSolarConfig
 from app.models.budget_status_history import BudgetStatusHistory
@@ -23,6 +24,7 @@ from app.schemas.budget import (
     CalcPreviewRequest,
     CalcPreviewResponse,
     ClientMiniOut,
+    EditHistoryOut,
     SolarConfigOut,
     StatusHistoryOut,
     StatusUpdateRequest,
@@ -247,6 +249,14 @@ def _to_detail_out(budget: Budget) -> BudgetDetailOut:
             )
             for h in budget.status_history
         ],
+        edit_history=[
+            EditHistoryOut(
+                edited_by=h.edited_by,
+                edited_by_nome=h.edited_by_user.nome,
+                edited_at=h.edited_at,
+            )
+            for h in budget.edit_history
+        ],
         created_at=budget.created_at,
         updated_at=budget.updated_at,
     )
@@ -262,6 +272,7 @@ def _load_budget_full(db: Session, budget_id: int) -> Budget:
             selectinload(Budget.solar_config),
             selectinload(Budget.itens),
             selectinload(Budget.status_history).selectinload(BudgetStatusHistory.changed_by_user),
+            selectinload(Budget.edit_history).selectinload(BudgetEditHistory.edited_by_user),
         )
     )
     budget = db.scalar(stmt)
@@ -381,6 +392,8 @@ def update_budget(
         db.flush()
     budget.solar_config = solar_config_model
 
+    db.add(BudgetEditHistory(budget_id=budget.id, edited_by=current_user.id))
+
     db.commit()
     return _to_detail_out(_load_budget_full(db, budget.id))
 
@@ -392,12 +405,9 @@ def update_budget_status(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # Qualquer vendedor pode alterar o status de orçamentos de outros vendedores
+    # (regra de negócio revisada — antes restrita ao dono do orçamento).
     budget = _load_budget_full(db, budget_id)
-    if budget.vendedor_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Você só pode alterar o status dos orçamentos dos quais é o vendedor.",
-        )
 
     permitido = ALLOWED_STATUS_TRANSITIONS.get(budget.status, set())
     if payload.status not in permitido:

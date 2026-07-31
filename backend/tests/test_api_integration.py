@@ -72,13 +72,13 @@ def inversor_product(client, auth_headers):
     return resp.json()
 
 
-def test_criar_produto_painel_falta_obrigatorio(client, auth_headers):
-    resp = client.post(
-        "/api/products",
-        headers=auth_headers,
-        json={"tipo": "painel_solar", "nome": "X", "status": "ativo"},  # falta modelo/composicao/potencia
-    )
-    assert resp.status_code == 422
+def test_criar_produto_painel_sem_campos_opcionais_usa_fallback(client, auth_headers):
+    # Nenhum campo além de `tipo` é obrigatório no cadastro — falta nome/modelo/composição/potência.
+    resp = client.post("/api/products", headers=auth_headers, json={"tipo": "painel_solar"})
+    assert resp.status_code == 201, resp.text
+    body = resp.json()
+    assert body["nome"] == "Painel Solar"
+    assert body["specs"]["potencia_wp"] is None
 
 
 @pytest.fixture()
@@ -116,7 +116,7 @@ def test_calc_preview_bate_com_pdf_exemplo(client, auth_headers, cliente_sbc, pa
             "solar_config": {
                 "consumo_mensal_kwh": 500,
                 "valor_conta": 540,
-                "tipo_telhado": "Cerâmico (Francês)",
+                "tipo_telhado": "Cerâmico (Francês) / Base Metálica",
                 "orientacao": "Norte",
                 "distribuidora": "Enel SP",
                 "painel_product_id": painel_product["id"],
@@ -142,7 +142,7 @@ def _payload_budget_sistema_completo(cliente_id, painel_id, inversor_id):
         "solar_config": {
             "consumo_mensal_kwh": 500,
             "valor_conta": 540,
-            "tipo_telhado": "Cerâmico (Francês)",
+            "tipo_telhado": "Cerâmico (Francês) / Base Metálica",
             "orientacao": "Norte",
             "distribuidora": "Enel SP",
             "painel_product_id": painel_id,

@@ -61,7 +61,7 @@ class BudgetCreate(BaseModel):
     client_id: int
     tipo_orcamento: TipoOrcamento
     margem_lucro_pct: float = Field(default=40, ge=0)
-    validade_dias: int = Field(default=30, gt=0)
+    validade_dias: int = Field(default=7, gt=0)
     observacoes: Optional[str] = None
     solar_config: Optional[SolarConfigIn] = None
     itens: list[BudgetItemIn] = Field(default_factory=list)
@@ -119,6 +119,14 @@ class StatusHistoryOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class EditHistoryOut(BaseModel):
+    edited_by: int
+    edited_by_nome: str
+    edited_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 class BudgetListItemOut(BaseModel):
     id: int
     numero_proposta: int
@@ -164,5 +172,6 @@ class BudgetDetailOut(BaseModel):
     custo_total: float
     preco_final: float
     status_history: list[StatusHistoryOut]
+    edit_history: list[EditHistoryOut]
     created_at: datetime
     updated_at: datetime

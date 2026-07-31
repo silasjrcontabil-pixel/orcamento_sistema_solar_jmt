@@ -47,11 +47,15 @@ class TipoItem(str, enum.Enum):
 
 
 class TipoTelhado(str, enum.Enum):
-    ceramico = "Cerâmico (Francês)"
-    fibrocimento = "Fibrocimento"
-    metalico = "Metálico"
-    laje = "Laje"
+    ceramico_metalica = "Cerâmico (Francês) / Base Metálica"
+    ceramico_madeira = "Cerâmico (Francês) / Base Madeira"
+    fibrocimento_metalica = "Fibrocimento / Base Metálica"
+    fibrocimento_madeira = "Fibrocimento / Base Madeira"
+    mini_trilho_baixo = "Mini Trilho / Baixo"
+    mini_trilho_alto = "Mini Trilho / Alto"
+    fixacao_l_metalica = "Fixação em L / Base Metálica"
     solo = "Solo"
+    laje = "Laje"
 
 
 class Orientacao(str, enum.Enum):

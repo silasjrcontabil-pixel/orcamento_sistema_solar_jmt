@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { to: '/clientes', label: 'Clientes' },
   { to: '/produtos', label: 'Produtos' },
   { to: '/orcamentos', label: 'Orçamentos' },
+  { to: '/vendedores', label: 'Vendedores' },
 ];
 
 export function Layout() {

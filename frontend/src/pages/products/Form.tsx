@@ -133,7 +133,6 @@ export function ProductForm() {
             <div className="sm:col-span-2">
               <Select
                 label="Tipo de produto"
-                required
                 value={form.tipo}
                 disabled={isEdit}
                 onChange={(e) => update('tipo', e.target.value as ProdutoTipo)}
@@ -146,12 +145,11 @@ export function ProductForm() {
               </Select>
             </div>
 
-            <Input label="Nome" required value={form.nome} onChange={(e) => update('nome', e.target.value)} />
+            <Input label="Nome" value={form.nome} onChange={(e) => update('nome', e.target.value)} />
 
             {form.tipo !== 'outro' && (
               <Input
                 label="Modelo"
-                required
                 value={form.modelo ?? ''}
                 onChange={(e) => update('modelo', e.target.value)}
               />
@@ -168,7 +166,6 @@ export function ProductForm() {
             {(form.tipo === 'painel_solar' || form.tipo === 'outro') && (
               <Input
                 label="Marca"
-                required={form.tipo === 'outro'}
                 value={form.marca ?? ''}
                 onChange={(e) => update('marca', e.target.value)}
               />
@@ -179,14 +176,12 @@ export function ProductForm() {
                 <div className="sm:col-span-2">
                   <Input
                     label="Composição/Estrutura interna"
-                    required
                     value={form.composicao_estrutura ?? ''}
                     onChange={(e) => update('composicao_estrutura', e.target.value)}
                   />
                 </div>
                 <Input
                   label="Potência"
-                  required
                   type="number"
                   step="0.01"
                   suffix="Wp"
@@ -223,7 +218,6 @@ export function ProductForm() {
             {form.tipo === 'inversor' && (
               <Input
                 label="Quantidade de kW"
-                required
                 type="number"
                 step="0.01"
                 suffix="kW"
@@ -245,7 +239,6 @@ export function ProductForm() {
 
             <Select
               label="Status"
-              required
               value={form.status}
               onChange={(e) => update('status', e.target.value as ProdutoStatus)}
             >

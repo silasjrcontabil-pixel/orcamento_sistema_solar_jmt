@@ -4,8 +4,12 @@ Uso:
     python scripts/seed_users.py
 
 Cada sócio tem sua própria senha (campo "senha" abaixo) em vez de uma senha única compartilhada.
-Se o usuário já existir, a senha é atualizada para o valor atual da lista SOCIOS — rodar de
-novo depois de editar uma senha aqui aplica a troca no banco.
+Se o usuário já existir (casando por `nome`), a senha e o `username` são atualizados para os
+valores atuais da lista SOCIOS — rodar de novo depois de editar algo aqui aplica a troca no
+banco (inclusive renomeando o username, ex. ao trocar de "Jheferson Luys" para "jheferson").
+
+Login: username é sempre o primeiro nome em minúsculas — a senha continua como está definida
+abaixo.
 """
 import sys
 from pathlib import Path
@@ -17,9 +21,9 @@ from app.models.user import User  # noqa: E402
 from app.security import hash_password  # noqa: E402
 
 SOCIOS = [
-    {"nome": "Jheferson Luys", "username": "Jheferson Luys", "senha": "Jheferson@1"},
-    {"nome": "Thiago Catalan", "username": "Thiago Catalan", "senha": "Thiago@1"},
-    {"nome": "Matheus Carvalho", "username": "Matheus Carvalho", "senha": "Matheus@1"},
+    {"nome": "Jheferson Luys", "username": "jheferson", "senha": "Jheferson@1"},
+    {"nome": "Thiago Catalan", "username": "thiago", "senha": "Thiago@1"},
+    {"nome": "Matheus Carvalho", "username": "matheus", "senha": "Matheus@1"},
 ]
 
 
@@ -28,10 +32,11 @@ def main():
     db = SessionLocal()
     try:
         for socio in SOCIOS:
-            existing = db.query(User).filter(User.username == socio["username"]).first()
+            existing = db.query(User).filter(User.nome == socio["nome"]).first()
             if existing:
+                existing.username = socio["username"]
                 existing.password_hash = hash_password(socio["senha"])
-                print(f"~ senha atualizada para {socio['username']} (id={existing.id})")
+                print(f"~ atualizado {socio['nome']} -> username={socio['username']} (id={existing.id})")
                 continue
             user = User(
                 nome=socio["nome"],
@@ -40,14 +45,14 @@ def main():
                 ativo=True,
             )
             db.add(user)
-            print(f"+ criado usuário {socio['username']}")
+            print(f"+ criado usuário {socio['username']} ({socio['nome']})")
         db.commit()
     finally:
         db.close()
 
-    print("\nSenhas aplicadas:")
+    print("\nLogins aplicados:")
     for socio in SOCIOS:
-        print(f"  {socio['username']}: {socio['senha']}")
+        print(f"  usuário: {socio['username']}  senha: {socio['senha']}")
 
 
 if __name__ == "__main__":

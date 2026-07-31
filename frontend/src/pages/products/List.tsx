@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { productsApi } from '../../lib/api';
 import type { Product, ProdutoStatus, ProdutoTipo } from '../../types';
@@ -15,12 +15,48 @@ import { formatNumber } from '../../lib/format';
 function specsSummary(product: Product): string {
   const specs = product.specs as Record<string, unknown>;
   if (product.tipo === 'painel_solar') {
-    return `${formatNumber(specs.potencia_wp as number)} Wp — ${specs.composicao_estrutura ?? ''}`;
+    const potencia = specs.potencia_wp != null ? `${formatNumber(specs.potencia_wp as number)} Wp` : '—';
+    return specs.composicao_estrutura ? `${potencia} — ${specs.composicao_estrutura}` : potencia;
   }
   if (product.tipo === 'inversor') {
-    return `${formatNumber(specs.quantidade_kw as number)} kW`;
+    return specs.quantidade_kw != null ? `${formatNumber(specs.quantidade_kw as number)} kW` : '—';
   }
   return specs.ano_fabricacao ? `Ano ${specs.ano_fabricacao}` : '—';
+}
+
+function productMarca(product: Product): string | null {
+  const specs = product.specs as Record<string, unknown>;
+  return product.marca ?? (specs.marca as string | undefined) ?? null;
+}
+
+function productPotencia(product: Product): number | null {
+  if (product.tipo !== 'painel_solar') return null;
+  const specs = product.specs as Record<string, unknown>;
+  return (specs.potencia_wp as number) ?? null;
+}
+
+interface FilterCount<T> {
+  value: T;
+  count: number;
+}
+
+function buildCounts<T>(products: Product[], extract: (p: Product) => T | null): FilterCount<T>[] {
+  const counts = new Map<T, number>();
+  for (const p of products) {
+    const value = extract(p);
+    if (value === null || value === undefined || value === '') continue;
+    counts.set(value, (counts.get(value) ?? 0) + 1);
+  }
+  return Array.from(counts.entries())
+    .map(([value, count]) => ({ value, count }))
+    .sort((a, b) => String(a.value).localeCompare(String(b.value), 'pt-BR', { numeric: true }));
+}
+
+function toggle<T>(set: Set<T>, value: T): Set<T> {
+  const next = new Set(set);
+  if (next.has(value)) next.delete(value);
+  else next.add(value);
+  return next;
 }
 
 export function ProductsList() {
@@ -29,6 +65,8 @@ export function ProductsList() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [marcasSelecionadas, setMarcasSelecionadas] = useState<Set<string>>(new Set());
+  const [potenciasSelecionadas, setPotenciasSelecionadas] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     setLoading(true);
@@ -39,6 +77,26 @@ export function ProductsList() {
       .catch(() => setError('Não foi possível carregar a lista de produtos.'))
       .finally(() => setLoading(false));
   }, [tipo, status]);
+
+  // Filtro de marca/potência é calculado em memória a partir da lista já carregada
+  // (tipo/status continuam sendo filtrados via API) — evita um novo parâmetro de
+  // filtro no backend só para isso.
+  const marcaCounts = useMemo(() => buildCounts(products, productMarca), [products]);
+  const potenciaCounts = useMemo(() => buildCounts(products, productPotencia), [products]);
+
+  const produtosFiltrados = products.filter((p) => {
+    if (marcasSelecionadas.size > 0) {
+      const marca = productMarca(p);
+      if (!marca || !marcasSelecionadas.has(marca)) return false;
+    }
+    if (potenciasSelecionadas.size > 0) {
+      const potencia = productPotencia(p);
+      if (potencia === null || !potenciasSelecionadas.has(potencia)) return false;
+    }
+    return true;
+  });
+
+  const temFiltroMarcaPotencia = marcasSelecionadas.size > 0 || potenciasSelecionadas.size > 0;
 
   return (
     <div className="space-y-6">
@@ -85,44 +143,117 @@ export function ProductsList() {
           }
         />
       ) : (
-        <Card goldTop={false} className="!p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left text-muted-foreground">
-                  <th className="py-3 pl-6 pr-4 font-semibold">Nome</th>
-                  <th className="py-3 pr-4 font-semibold">Tipo</th>
-                  <th className="py-3 pr-4 font-semibold">Modelo/Marca</th>
-                  <th className="py-3 pr-4 font-semibold">Especificações</th>
-                  <th className="py-3 pr-4 font-semibold">Status</th>
-                  <th className="py-3 pr-6 font-semibold text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((p) => (
-                  <tr key={p.id} className="border-b border-border/60 last:border-0 hover:bg-secondary/40">
-                    <td className="py-3 pl-6 pr-4 font-medium">{p.nome}</td>
-                    <td className="py-3 pr-4 text-muted-foreground">
-                      {PRODUTO_TIPOS.find((t) => t.value === p.tipo)?.label}
-                    </td>
-                    <td className="py-3 pr-4 text-muted-foreground">
-                      {[p.modelo, p.marca].filter(Boolean).join(' / ') || '—'}
-                    </td>
-                    <td className="py-3 pr-4 text-muted-foreground">{specsSummary(p)}</td>
-                    <td className="py-3 pr-4">
-                      <ProductStatusBadge status={p.status} />
-                    </td>
-                    <td className="py-3 pr-6 text-right">
-                      <Link to={`/produtos/${p.id}/editar`} className="btn-ghost">
-                        Editar
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+          <aside className="w-full shrink-0 lg:w-60">
+            <Card goldTop={false} className="!bg-background-soft">
+              <div className="space-y-5">
+              <div className="flex items-center justify-between">
+                <h3 className="font-display font-bold text-sm">Filtros</h3>
+                {temFiltroMarcaPotencia && (
+                  <button
+                    type="button"
+                    className="text-xs text-primary hover:underline"
+                    onClick={() => {
+                      setMarcasSelecionadas(new Set());
+                      setPotenciasSelecionadas(new Set());
+                    }}
+                  >
+                    Limpar
+                  </button>
+                )}
+              </div>
+
+              {marcaCounts.length > 0 && (
+                <div>
+                  <p className="field-label mb-2">Marca</p>
+                  <div className="space-y-1.5">
+                    {marcaCounts.map(({ value, count }) => (
+                      <label key={value} className="flex items-center gap-2 text-sm cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="accent-primary"
+                          checked={marcasSelecionadas.has(value)}
+                          onChange={() => setMarcasSelecionadas((prev) => toggle(prev, value))}
+                        />
+                        <span className="flex-1 truncate">{value}</span>
+                        <span className="text-muted-foreground text-xs">({count})</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {potenciaCounts.length > 0 && (
+                <div>
+                  <p className="field-label mb-2">Potência do módulo</p>
+                  <div className="space-y-1.5">
+                    {potenciaCounts.map(({ value, count }) => (
+                      <label key={value} className="flex items-center gap-2 text-sm cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="accent-primary"
+                          checked={potenciasSelecionadas.has(value)}
+                          onChange={() => setPotenciasSelecionadas((prev) => toggle(prev, value))}
+                        />
+                        <span className="flex-1">{formatNumber(value)} Wp</span>
+                        <span className="text-muted-foreground text-xs">({count})</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+              </div>
+            </Card>
+          </aside>
+
+          <div className="flex-1 min-w-0 space-y-3">
+            {produtosFiltrados.length === 0 ? (
+              <EmptyState
+                title="Nenhum produto com esses filtros"
+                description="Ajuste os filtros de marca/potência para ver mais resultados."
+              />
+            ) : (
+              <Card goldTop={false} className="!p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border text-left text-muted-foreground">
+                        <th className="py-3 pl-6 pr-4 font-semibold">Nome</th>
+                        <th className="py-3 pr-4 font-semibold">Tipo</th>
+                        <th className="py-3 pr-4 font-semibold">Modelo/Marca</th>
+                        <th className="py-3 pr-4 font-semibold">Especificações</th>
+                        <th className="py-3 pr-4 font-semibold">Status</th>
+                        <th className="py-3 pr-6 font-semibold text-right">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {produtosFiltrados.map((p) => (
+                        <tr key={p.id} className="border-b border-border/60 last:border-0 hover:bg-secondary/40">
+                          <td className="py-3 pl-6 pr-4 font-medium">{p.nome}</td>
+                          <td className="py-3 pr-4 text-muted-foreground">
+                            {PRODUTO_TIPOS.find((t) => t.value === p.tipo)?.label}
+                          </td>
+                          <td className="py-3 pr-4 text-muted-foreground">
+                            {[p.modelo, p.marca].filter(Boolean).join(' / ') || '—'}
+                          </td>
+                          <td className="py-3 pr-4 text-muted-foreground">{specsSummary(p)}</td>
+                          <td className="py-3 pr-4">
+                            <ProductStatusBadge status={p.status} />
+                          </td>
+                          <td className="py-3 pr-6 text-right">
+                            <Link to={`/produtos/${p.id}/editar`} className="btn-ghost">
+                              Editar
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+            )}
           </div>
-        </Card>
+        </div>
       )}
     </div>
   );
