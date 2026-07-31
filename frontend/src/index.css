@@ -66,6 +66,10 @@
   .safe-top {
     padding-top: max(0.75rem, env(safe-area-inset-top));
   }
+
+  .safe-top-lg {
+    padding-top: max(1.5rem, env(safe-area-inset-top));
+  }
 }
 
 @layer components {

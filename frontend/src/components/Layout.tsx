@@ -84,7 +84,7 @@ export function Layout() {
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-40 bg-black/70" onClick={() => setMobileOpen(false)}>
           <div
-            className="absolute left-0 top-0 h-full w-[85vw] max-w-[380px] bg-background-soft border-r border-border p-6"
+            className="absolute left-0 top-0 h-full w-[85vw] max-w-[380px] safe-top-lg bg-background-soft border-r border-border px-6 pb-6"
             onClick={(e) => e.stopPropagation()}
           >
             <nav className="space-y-2 mt-2">
