@@ -21,6 +21,6 @@ export const DEFAULT_WIZARD_STATE: WizardState = {
   itensExtras: [],
   itensIndividuais: [],
   margemLucroPct: 40,
-  validadeDias: 30,
+  validadeDias: 7,
   observacoes: '',
 };
