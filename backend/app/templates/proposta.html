@@ -61,10 +61,14 @@
 
   .cover-page { padding: 0; overflow: hidden; }
   .cover-bg { position: absolute; top: 0; left: 0; width: 210mm; height: 297mm; }
-  /* Fundo sólido igual ao preto do resto do PDF (#0a0a0a) — antes dependia só do tom
-     escuro da foto de fundo, que ficava ligeiramente diferente do preto usado nas outras
-     páginas. */
-  .cover-content { position: relative; width: 56%; height: 297mm; padding: 30px 20px 30px 40px; display: flex; flex-direction: column; background: #0a0a0a; }
+  /* Sem background próprio aqui (fica transparente sobre `.cover-bg`) — a cor da foto de
+     fundo já foi corrigida para #0a0a0a na própria imagem (`capa_cover_bg.jpg`). Uma <div>
+     opaca sobreposta à foto nessa mesma região chegou a ser usada para igualar a cor, mas
+     criava duas camadas de imagem se tocando exatamente na borda diagonal — o visualizador
+     de PDF do Chrome (PDF.js) renderizava uma linha verde de costura ali (canvas
+     tiling/antialiasing entre as duas camadas); MuPDF não reproduzia o problema, então só
+     apareceu depois de aberto num visualizador real. */
+  .cover-content { position: relative; width: 56%; height: 297mm; padding: 30px 20px 30px 40px; display: flex; flex-direction: column; }
   .cover-logo { width: 220px; }
   .cover-heading { margin-top: 70px; }
   .cover-kicker { font-size: 11px; font-weight: bold; letter-spacing: 2px; color: #EFA809; }
