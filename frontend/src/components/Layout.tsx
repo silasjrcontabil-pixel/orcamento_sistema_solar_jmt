@@ -65,7 +65,7 @@ export function Layout() {
       </aside>
 
       {/* Topbar - mobile */}
-      <header className="lg:hidden sticky top-0 z-40 flex items-center gap-3 border-b border-border bg-background-soft px-4 py-3">
+      <header className="lg:hidden safe-top sticky top-0 z-40 flex items-center gap-3 border-b border-border bg-background-soft px-4 pb-3">
         <button
           onClick={() => setMobileOpen((v) => !v)}
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-secondary text-foreground active:bg-primary/10"

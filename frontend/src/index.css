@@ -61,6 +61,14 @@
 }
 
 @layer components {
+  /* iOS (viewport-fit=cover + status bar translúcida) desenha a barra de status por
+     cima do conteúdo — sem isso, relógio/bateria ficam sobrepostos no header mobile. */
+  .safe-top {
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+  }
+}
+
+@layer components {
   .card {
     @apply bg-surface border border-border rounded-lg relative overflow-hidden;
   }
