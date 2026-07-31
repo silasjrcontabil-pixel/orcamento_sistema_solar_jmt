@@ -23,6 +23,7 @@ export function BudgetDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [nextStatus, setNextStatus] = useState<OrcamentoStatus | ''>('');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [changingStatus, setChangingStatus] = useState(false);
@@ -45,19 +46,27 @@ export function BudgetDetail() {
     setExporting(true);
     try {
       const blob = await budgetsApi.downloadPdf(budget.id);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `orcamento-${budget.numero_proposta}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      setPdfUrl(URL.createObjectURL(blob));
     } catch {
       setError('Não foi possível gerar o PDF do orçamento.');
     } finally {
       setExporting(false);
     }
+  }
+
+  function handleClosePdfPreview() {
+    if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+    setPdfUrl(null);
+  }
+
+  function handleDownloadPdf() {
+    if (!pdfUrl || !budget) return;
+    const a = document.createElement('a');
+    a.href = pdfUrl;
+    a.download = `orcamento-${budget.numero_proposta}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 
   async function handleConfirmStatusChange() {
@@ -102,7 +111,7 @@ export function BudgetDetail() {
             </Button>
           )}
           <Button onClick={handleExportPdf} loading={exporting}>
-            Exportar PDF
+            Ver PDF
           </Button>
         </div>
       </div>
@@ -313,6 +322,29 @@ export function BudgetDetail() {
         </span>
         ?
         {nextStatus === 'cancelado' && ' Esta ação não pode ser desfeita.'}
+      </Modal>
+
+      <Modal
+        open={!!pdfUrl}
+        onClose={handleClosePdfPreview}
+        title={`Proposta #${budget.numero_proposta}`}
+        widthClassName="max-w-4xl"
+        footer={
+          <>
+            <Button variant="secondary" onClick={handleClosePdfPreview}>
+              Fechar
+            </Button>
+            <Button onClick={handleDownloadPdf}>Baixar PDF</Button>
+          </>
+        }
+      >
+        {pdfUrl && (
+          <iframe
+            src={pdfUrl}
+            title={`Proposta #${budget.numero_proposta}`}
+            className="h-[75vh] w-full rounded-md border border-border bg-white"
+          />
+        )}
       </Modal>
     </div>
   );
