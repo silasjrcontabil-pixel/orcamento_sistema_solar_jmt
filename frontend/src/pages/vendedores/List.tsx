@@ -15,7 +15,9 @@ import { formatDateTime } from '../../lib/format';
 export function VendedoresList() {
   const currentUsername = useAuthStore((s) => s.user?.username);
   // Só o Jheferson pode trocar senha de outros vendedores e ativar/desativar contas.
-  const isAdmin = currentUsername === 'jheferson';
+  // Comparação case-insensitive: o username em produção está salvo como "Jheferson" (com
+  // maiúscula), não em minúsculas como o restante da base sugeriria.
+  const isAdmin = currentUsername?.toLowerCase() === 'jheferson';
 
   const [vendedores, setVendedores] = useState<UserAccount[]>([]);
   const [loading, setLoading] = useState(true);
