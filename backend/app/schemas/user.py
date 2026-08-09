@@ -20,3 +20,11 @@ class UserOut(BaseModel):
     created_at: UTCDateTime
 
     model_config = {"from_attributes": True}
+
+
+class UserPasswordUpdate(BaseModel):
+    senha: str = Field(min_length=4)
+
+
+class UserStatusUpdate(BaseModel):
+    ativo: bool

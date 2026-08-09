@@ -212,6 +212,10 @@ export const budgetsApi = {
 export const usersApi = {
   list: () => request<UserAccount[]>('/users'),
   create: (payload: UserInput) => request<UserAccount>('/users', { method: 'POST', body: payload }),
+  updatePassword: (id: number, senha: string) =>
+    request<void>(`/users/${id}/senha`, { method: 'PUT', body: { senha } }),
+  updateStatus: (id: number, ativo: boolean) =>
+    request<UserAccount>(`/users/${id}/status`, { method: 'PUT', body: { ativo } }),
 };
 
 // ---------------------------------------------------------------------------

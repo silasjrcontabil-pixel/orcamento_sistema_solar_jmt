@@ -78,7 +78,7 @@ def lookup_cnpj(cnpj: str, current_user: User = Depends(get_current_user)):
         cep=estabelecimento.get("cep") or None,
         endereco=endereco,
         estado_uf=estado.get("sigla"),
-        municipio_cod_ibge=str(cidade["id"]) if cidade.get("id") is not None else None,
+        municipio_cod_ibge=str(cidade["ibge_id"]) if cidade.get("ibge_id") is not None else None,
         municipio_nome=cidade.get("nome"),
     )
 
