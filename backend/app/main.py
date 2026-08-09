@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import auth, budgets, clients, dashboard, geo, products, users
+from app.routers import auth, budgets, client_lookup, clients, dashboard, geo, products, users
 from app.services.reference_data import load_reference_data
 
 
@@ -29,6 +29,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(geo.router)
 app.include_router(clients.router)
+app.include_router(client_lookup.router)
 app.include_router(products.router)
 app.include_router(budgets.router)
 app.include_router(dashboard.router)

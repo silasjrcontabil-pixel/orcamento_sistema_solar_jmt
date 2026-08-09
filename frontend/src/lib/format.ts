@@ -21,3 +21,22 @@ export function formatDateTime(value: string | null | undefined): string {
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 }
+
+/** Texto digitável válido em campo decimal pt-BR: dígitos com no máximo uma vírgula ou ponto. */
+export function isDecimalInputText(raw: string): boolean {
+  return /^\d*[.,]?\d*$/.test(raw);
+}
+
+/** Converte texto digitado (vírgula ou ponto como separador) para número. Inválido/vazio vira 0. */
+export function parseDecimalInput(raw: string): number {
+  const normalizado = raw.trim().replace(',', '.');
+  if (normalizado === '' || normalizado === '.') return 0;
+  const valor = Number(normalizado);
+  return Number.isNaN(valor) ? 0 : valor;
+}
+
+/** Texto para exibir um número num campo editável, com vírgula pt-BR. 0 vira campo vazio. */
+export function formatDecimalForEdit(value: number | null | undefined): string {
+  if (value === null || value === undefined || Number.isNaN(value) || value === 0) return '';
+  return String(value).replace('.', ',');
+}

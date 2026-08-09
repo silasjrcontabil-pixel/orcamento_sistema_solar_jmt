@@ -5,7 +5,7 @@ import { productsApi } from '../lib/api';
 import { Select } from './Select';
 import { Input } from './Input';
 import { Button } from './Button';
-import { formatCurrency } from '../lib/format';
+import { formatCurrency, formatDecimalForEdit, isDecimalInputText, parseDecimalInput } from '../lib/format';
 
 interface ItemsEditorProps {
   items: BudgetItemInput[];
@@ -28,6 +28,54 @@ const DEFAULT_ITEM = (tipo: TipoItem): BudgetItemInput => ({
  * evita salvar itens "de graça" (custo 0) sem o usuário perceber. */
 export function itemsValid(items: BudgetItemInput[]): boolean {
   return items.every((item) => item.descricao.trim().length > 0 && item.quantidade > 0 && item.custo_unitario > 0);
+}
+
+/**
+ * Campo numérico decimal que aceita vírgula ou ponto (input type="number" nativo rejeita
+ * vírgula e zera o campo inteiro). Mantém o texto digitado em estado local e só reformata
+ * a partir do valor externo quando ele diverge do que o texto atual representa — assim o
+ * "0," digitado não é apagado no meio da digitação.
+ */
+function DecimalField({
+  label,
+  suffix,
+  value,
+  onChange,
+  error,
+}: {
+  label: string;
+  suffix?: string;
+  value: number;
+  onChange: (value: number) => void;
+  error?: string;
+}) {
+  const [text, setText] = useState(() => formatDecimalForEdit(value));
+
+  useEffect(() => {
+    if (parseDecimalInput(text) !== value) {
+      setText(formatDecimalForEdit(value));
+    }
+    // Só deve resincronizar quando o valor externo muda (ex.: item removido/resetado).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
+  return (
+    <Input
+      label={label}
+      type="text"
+      inputMode="decimal"
+      suffix={suffix}
+      required
+      value={text}
+      onChange={(e) => {
+        const raw = e.target.value;
+        if (!isDecimalInputText(raw)) return;
+        setText(raw);
+        onChange(parseDecimalInput(raw));
+      }}
+      error={error}
+    />
+  );
 }
 
 export function ItemsEditor({ items, onChange, allowedTypes, allowProduct }: ItemsEditorProps) {
@@ -116,23 +164,17 @@ export function ItemsEditor({ items, onChange, allowedTypes, allowProduct }: Ite
                 error={item.descricao.trim().length === 0 ? 'Obrigatório' : undefined}
               />
             </div>
-            <Input
+            <DecimalField
               label="Quantidade"
-              type="number"
-              min={0}
-              required
               value={item.quantidade}
-              onChange={(e) => updateItem(index, { quantidade: Number(e.target.value) })}
+              onChange={(value) => updateItem(index, { quantidade: value })}
               error={item.quantidade <= 0 ? 'Deve ser maior que 0' : undefined}
             />
-            <Input
+            <DecimalField
               label="Custo unitário"
-              type="number"
               suffix="R$"
-              min={0}
-              required
               value={item.custo_unitario}
-              onChange={(e) => updateItem(index, { custo_unitario: Number(e.target.value) })}
+              onChange={(value) => updateItem(index, { custo_unitario: value })}
               error={item.custo_unitario <= 0 ? 'Informe o custo' : undefined}
             />
           </div>

@@ -165,6 +165,26 @@ export interface ClientFilters {
   estado?: string;
 }
 
+export interface CnpjLookupResult {
+  nome: string;
+  ddd?: string | null;
+  telefone?: string | null;
+  email?: string | null;
+  cep?: string | null;
+  endereco?: string | null;
+  estado_uf?: string | null;
+  municipio_cod_ibge?: string | null;
+  municipio_nome?: string | null;
+}
+
+export interface CepLookupResult {
+  cep: string;
+  endereco?: string | null;
+  estado_uf?: string | null;
+  municipio_cod_ibge?: string | null;
+  municipio_nome?: string | null;
+}
+
 // ---------------------------------------------------------------------------
 // Produtos
 // ---------------------------------------------------------------------------

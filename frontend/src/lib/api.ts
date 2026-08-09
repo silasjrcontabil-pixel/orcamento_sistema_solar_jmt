@@ -12,9 +12,11 @@ import type {
   BudgetListItem,
   CalcPreviewRequest,
   CalcPreviewResponse,
+  CepLookupResult,
   Client,
   ClientFilters,
   ClientInput,
+  CnpjLookupResult,
   CurrentUser,
   DashboardEvolucaoPonto,
   DashboardFilters,
@@ -169,6 +171,8 @@ export const clientsApi = {
   create: (payload: ClientInput) => request<Client>('/clients', { method: 'POST', body: payload }),
   update: (id: number, payload: ClientInput) =>
     request<Client>(`/clients/${id}`, { method: 'PUT', body: payload }),
+  lookupCnpj: (cnpj: string) => request<CnpjLookupResult>(`/clients/lookup/cnpj/${cnpj}`),
+  lookupCep: (cep: string) => request<CepLookupResult>(`/clients/lookup/cep/${cep}`),
 };
 
 // ---------------------------------------------------------------------------

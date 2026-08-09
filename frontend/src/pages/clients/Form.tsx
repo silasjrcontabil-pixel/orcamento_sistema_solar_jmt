@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { clientsApi, geoApi } from '../../lib/api';
+import { ApiError, clientsApi, geoApi } from '../../lib/api';
 import type { ClientInput, EstadosResponse, MunicipioOption, TipoResidencia } from '../../types';
 import { TIPO_RESIDENCIA } from '../../types';
 import { Card } from '../../components/Card';
@@ -34,6 +34,14 @@ export function ClientForm() {
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cnpjLookup, setCnpjLookup] = useState<{ loading: boolean; error: string | null }>({
+    loading: false,
+    error: null,
+  });
+  const [cepLookup, setCepLookup] = useState<{ loading: boolean; error: string | null }>({
+    loading: false,
+    error: null,
+  });
 
   useEffect(() => {
     geoApi
@@ -77,6 +85,61 @@ export function ClientForm() {
 
   function update<K extends keyof ClientInput>(key: K, value: ClientInput[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function updateMany(patch: Partial<ClientInput>) {
+    setForm((prev) => ({ ...prev, ...patch }));
+  }
+
+  function lookupErrorMessage(err: unknown, notFound: string, generic: string): string {
+    if (err instanceof ApiError && err.status === 404) return notFound;
+    return generic;
+  }
+
+  /** CNPJ.ws só cobre CNPJ (14 dígitos) — CPF não tem consulta pública equivalente. */
+  async function handleCnpjBlur() {
+    const digits = (form.cnpj_cpf ?? '').replace(/\D/g, '');
+    if (digits.length !== 14) return;
+    setCnpjLookup({ loading: true, error: null });
+    try {
+      const data = await clientsApi.lookupCnpj(digits);
+      updateMany({
+        nome: data.nome || form.nome,
+        ddd: data.ddd || form.ddd,
+        telefone: data.telefone || form.telefone,
+        email: data.email || form.email,
+        cep: data.cep || form.cep,
+        endereco: data.endereco || form.endereco,
+        estado_uf: data.estado_uf || form.estado_uf,
+        municipio_cod_ibge: data.municipio_cod_ibge || form.municipio_cod_ibge,
+      });
+      setCnpjLookup({ loading: false, error: null });
+    } catch (err) {
+      setCnpjLookup({
+        loading: false,
+        error: lookupErrorMessage(err, 'CNPJ não encontrado.', 'Não foi possível buscar os dados do CNPJ agora.'),
+      });
+    }
+  }
+
+  async function handleCepBlur() {
+    const digits = (form.cep ?? '').replace(/\D/g, '');
+    if (digits.length !== 8) return;
+    setCepLookup({ loading: true, error: null });
+    try {
+      const data = await clientsApi.lookupCep(digits);
+      updateMany({
+        endereco: data.endereco || form.endereco,
+        estado_uf: data.estado_uf || form.estado_uf,
+        municipio_cod_ibge: data.municipio_cod_ibge || form.municipio_cod_ibge,
+      });
+      setCepLookup({ loading: false, error: null });
+    } catch (err) {
+      setCepLookup({
+        loading: false,
+        error: lookupErrorMessage(err, 'CEP não encontrado.', 'Não foi possível buscar o endereço agora.'),
+      });
+    }
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -144,6 +207,9 @@ export function ClientForm() {
               label="CNPJ/CPF"
               value={form.cnpj_cpf ?? ''}
               onChange={(e) => update('cnpj_cpf', e.target.value)}
+              onBlur={handleCnpjBlur}
+              hint={cnpjLookup.loading ? 'Buscando dados do CNPJ...' : 'CNPJ (14 dígitos) busca os dados automaticamente'}
+              error={cnpjLookup.error ?? undefined}
             />
             <Input
               label="Email"
@@ -151,7 +217,14 @@ export function ClientForm() {
               value={form.email ?? ''}
               onChange={(e) => update('email', e.target.value)}
             />
-            <Input label="CEP" value={form.cep ?? ''} onChange={(e) => update('cep', e.target.value)} />
+            <Input
+              label="CEP"
+              value={form.cep ?? ''}
+              onChange={(e) => update('cep', e.target.value)}
+              onBlur={handleCepBlur}
+              hint={cepLookup.loading ? 'Buscando endereço...' : undefined}
+              error={cepLookup.error ?? undefined}
+            />
             <Select
               label="Tipo Residência"
               required

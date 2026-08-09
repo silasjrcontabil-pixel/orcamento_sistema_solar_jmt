@@ -15,7 +15,7 @@ Jinja2==3.1.5
 weasyprint==69.0
 email-validator==2.2.0
 python-dateutil==2.9.0.post0
+httpx==0.28.1
 
 # tests
 pytest==8.3.4
-httpx==0.28.1
