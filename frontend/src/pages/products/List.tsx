@@ -4,6 +4,7 @@ import { productsApi } from '../../lib/api';
 import type { Product, ProdutoStatus, ProdutoTipo } from '../../types';
 import { PRODUTO_TIPOS } from '../../types';
 import { Card } from '../../components/Card';
+import { Input } from '../../components/Input';
 import { Select } from '../../components/Select';
 import { Button } from '../../components/Button';
 import { Spinner } from '../../components/Spinner';
@@ -33,6 +34,51 @@ function productPotencia(product: Product): number | null {
   if (product.tipo !== 'painel_solar') return null;
   const specs = product.specs as Record<string, unknown>;
   return (specs.potencia_wp as number) ?? null;
+}
+
+const SPEC_LABELS: Record<string, string> = {
+  potencia_wp: 'potência wp',
+  composicao_estrutura: 'composição estrutura',
+  quantidade_kw: 'quantidade kw',
+  ano_fabricacao: 'ano fabricação',
+  altura: 'altura',
+  largura: 'largura',
+  peso: 'peso',
+  marca: 'marca',
+};
+
+/** Remove acentos e caixa para que "potencia" case com "potência". */
+function normalize(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase();
+}
+
+/**
+ * Texto único com tudo que o produto exibe (colunas + specs), usado pelo filtro
+ * curinga. Guarda o número cru e o formatado para que "1550" e "1.550" casem.
+ */
+function searchBlob(product: Product): string {
+  const parts: (string | number | null | undefined)[] = [
+    product.nome,
+    product.modelo,
+    product.marca,
+    product.tipo,
+    PRODUTO_TIPOS.find((t) => t.value === product.tipo)?.label,
+    product.status,
+    product.status === 'ativo' ? 'Ativo' : 'Desativado',
+    specsSummary(product),
+  ];
+
+  for (const [key, raw] of Object.entries(product.specs as Record<string, unknown>)) {
+    if (raw === null || raw === undefined || raw === '') continue;
+    parts.push(SPEC_LABELS[key] ?? key.replace(/_/g, ' '));
+    parts.push(String(raw));
+    if (typeof raw === 'number') parts.push(formatNumber(raw));
+  }
+
+  return normalize(parts.filter((v) => v !== null && v !== undefined && v !== '').join(' '));
 }
 
 interface FilterCount<T> {
@@ -67,6 +113,8 @@ export function ProductsList() {
   const [error, setError] = useState<string | null>(null);
   const [marcasSelecionadas, setMarcasSelecionadas] = useState<Set<string>>(new Set());
   const [potenciasSelecionadas, setPotenciasSelecionadas] = useState<Set<number>>(new Set());
+  const [curingaTermos, setCuringaTermos] = useState<string[]>([]);
+  const [curingaDigitando, setCuringaDigitando] = useState('');
 
   useEffect(() => {
     setLoading(true);
@@ -84,6 +132,25 @@ export function ProductsList() {
   const marcaCounts = useMemo(() => buildCounts(products, productMarca), [products]);
   const potenciaCounts = useMemo(() => buildCounts(products, productPotencia), [products]);
 
+  const blobs = useMemo(() => new Map(products.map((p) => [p.id, searchBlob(p)])), [products]);
+
+  // O texto ainda não confirmado com Enter também filtra, para dar retorno imediato.
+  const curingaAtivos = useMemo(() => {
+    const termos = [...curingaTermos, curingaDigitando].map(normalize).map((t) => t.trim());
+    return termos.filter(Boolean);
+  }, [curingaTermos, curingaDigitando]);
+
+  function adicionarTermo(texto: string) {
+    // Aceita vários de uma vez ao colar: "550, canadian; growatt".
+    const novos = texto
+      .split(/[,;]/)
+      .map((t) => t.trim())
+      .filter(Boolean);
+    if (novos.length === 0) return;
+    setCuringaTermos((prev) => [...prev, ...novos.filter((t) => !prev.includes(t))]);
+    setCuringaDigitando('');
+  }
+
   const produtosFiltrados = products.filter((p) => {
     if (marcasSelecionadas.size > 0) {
       const marca = productMarca(p);
@@ -93,10 +160,16 @@ export function ProductsList() {
       const potencia = productPotencia(p);
       if (potencia === null || !potenciasSelecionadas.has(potencia)) return false;
     }
+    if (curingaAtivos.length > 0) {
+      const blob = blobs.get(p.id) ?? '';
+      // Todos os termos precisam aparecer (cada termo refina a busca).
+      if (!curingaAtivos.every((t) => blob.includes(t))) return false;
+    }
     return true;
   });
 
-  const temFiltroMarcaPotencia = marcasSelecionadas.size > 0 || potenciasSelecionadas.size > 0;
+  const temFiltroMarcaPotencia =
+    marcasSelecionadas.size > 0 || potenciasSelecionadas.size > 0 || curingaTermos.length > 0 || curingaDigitando !== '';
 
   return (
     <div className="space-y-6">
@@ -111,20 +184,68 @@ export function ProductsList() {
       </div>
 
       <Card goldTop={false} className="!bg-background-soft">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Select label="Tipo" value={tipo} onChange={(e) => setTipo(e.target.value as ProdutoTipo | '')}>
-            <option value="">Todos os tipos</option>
-            {PRODUTO_TIPOS.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
-            ))}
-          </Select>
-          <Select label="Status" value={status} onChange={(e) => setStatus(e.target.value as ProdutoStatus | '')}>
-            <option value="">Todos os status</option>
-            <option value="ativo">Ativo</option>
-            <option value="desativado">Desativado</option>
-          </Select>
+        <div className="space-y-4">
+          <div>
+            <Input
+              label="Busca curinga"
+              placeholder="Digite qualquer coisa (nome, marca, modelo, potência...) e tecle Enter"
+              value={curingaDigitando}
+              onChange={(e) => setCuringaDigitando(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  adicionarTermo(curingaDigitando);
+                } else if (e.key === 'Backspace' && curingaDigitando === '' && curingaTermos.length > 0) {
+                  setCuringaTermos((prev) => prev.slice(0, -1));
+                }
+              }}
+              onBlur={() => adicionarTermo(curingaDigitando)}
+              hint="Procura em todas as colunas da tabela. Vários termos combinam entre si (E)."
+            />
+            {curingaTermos.length > 0 && (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {curingaTermos.map((termo) => (
+                  <span
+                    key={termo}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-2.5 py-1 text-xs font-medium text-foreground"
+                  >
+                    {termo}
+                    <button
+                      type="button"
+                      aria-label={`Remover filtro ${termo}`}
+                      className="text-muted-foreground transition-colors hover:text-danger"
+                      onClick={() => setCuringaTermos((prev) => prev.filter((t) => t !== termo))}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+                <button
+                  type="button"
+                  className="text-xs text-primary hover:underline"
+                  onClick={() => setCuringaTermos([])}
+                >
+                  Limpar termos
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Select label="Tipo" value={tipo} onChange={(e) => setTipo(e.target.value as ProdutoTipo | '')}>
+              <option value="">Todos os tipos</option>
+              {PRODUTO_TIPOS.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </Select>
+            <Select label="Status" value={status} onChange={(e) => setStatus(e.target.value as ProdutoStatus | '')}>
+              <option value="">Todos os status</option>
+              <option value="ativo">Ativo</option>
+              <option value="desativado">Desativado</option>
+            </Select>
+          </div>
         </div>
       </Card>
 
@@ -156,6 +277,8 @@ export function ProductsList() {
                     onClick={() => {
                       setMarcasSelecionadas(new Set());
                       setPotenciasSelecionadas(new Set());
+                      setCuringaTermos([]);
+                      setCuringaDigitando('');
                     }}
                   >
                     Limpar
@@ -210,7 +333,7 @@ export function ProductsList() {
             {produtosFiltrados.length === 0 ? (
               <EmptyState
                 title="Nenhum produto com esses filtros"
-                description="Ajuste os filtros de marca/potência para ver mais resultados."
+                description="Ajuste a busca curinga ou os filtros de marca/potência para ver mais resultados."
               />
             ) : (
               <Card goldTop={false} className="!p-0">
