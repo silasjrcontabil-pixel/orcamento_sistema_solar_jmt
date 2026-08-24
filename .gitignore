@@ -1,6 +1,7 @@
 # Credenciais / dados sensíveis
 *.pem
 *.key
+backup_supabase/
 
 # Ambientes Python (backend)
 backend/venv/

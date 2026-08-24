@@ -25,7 +25,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('budget_id', sa.Integer(), nullable=False),
     sa.Column('edited_by', sa.Integer(), nullable=False),
-    sa.Column('edited_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('edited_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['budget_id'], ['budgets.id'], ),
     sa.ForeignKeyConstraint(['edited_by'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')

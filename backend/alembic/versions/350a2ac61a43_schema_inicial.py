@@ -29,8 +29,8 @@ def upgrade() -> None:
     sa.Column('marca', sa.String(length=120), nullable=True),
     sa.Column('status', sa.Enum('ativo', 'desativado', name='produtostatus', native_enum=False, length=20), nullable=False),
     sa.Column('specs', sa.JSON().with_variant(postgresql.JSONB(astext_type=sa.String()), 'postgresql'), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('users',
@@ -39,7 +39,7 @@ def upgrade() -> None:
     sa.Column('username', sa.String(length=60), nullable=False),
     sa.Column('password_hash', sa.String(length=255), nullable=False),
     sa.Column('ativo', sa.Boolean(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_users_username'), 'users', ['username'], unique=True)
@@ -57,8 +57,8 @@ def upgrade() -> None:
     sa.Column('endereco', sa.String(length=255), nullable=False),
     sa.Column('tipo_residencia', sa.Enum('Residencial', 'Comercial', 'Industrial', 'Rural', name='tiporesidencia', native_enum=False, length=20), nullable=False),
     sa.Column('created_by', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['created_by'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -72,8 +72,8 @@ def upgrade() -> None:
     sa.Column('margem_lucro_pct', sa.Numeric(precision=6, scale=2), nullable=False),
     sa.Column('validade_dias', sa.Integer(), nullable=False),
     sa.Column('observacoes', sa.Text(), nullable=True),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['client_id'], ['clients.id'], ),
     sa.ForeignKeyConstraint(['vendedor_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -88,7 +88,7 @@ def upgrade() -> None:
     sa.Column('quantidade', sa.Numeric(precision=10, scale=2), nullable=False),
     sa.Column('custo_unitario', sa.Numeric(precision=12, scale=2), nullable=False),
     sa.Column('custo_total', sa.Numeric(precision=12, scale=2), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['budget_id'], ['budgets.id'], ),
     sa.ForeignKeyConstraint(['product_id'], ['products.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -130,7 +130,7 @@ def upgrade() -> None:
     sa.Column('status_anterior', sa.Enum('rascunho', 'enviado', 'aguardando_resposta', 'confirmado', 'cancelado', name='orcamentostatus', native_enum=False, length=30), nullable=True),
     sa.Column('status_novo', sa.Enum('rascunho', 'enviado', 'aguardando_resposta', 'confirmado', 'cancelado', name='orcamentostatus', native_enum=False, length=30), nullable=False),
     sa.Column('changed_by', sa.Integer(), nullable=False),
-    sa.Column('changed_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.Column('changed_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['budget_id'], ['budgets.id'], ),
     sa.ForeignKeyConstraint(['changed_by'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')

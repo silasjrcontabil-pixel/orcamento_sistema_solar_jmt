@@ -6,8 +6,15 @@ de endpoints em `../API_CONTRACT.md`; plano de implementação em
 
 ## Stack
 
-FastAPI + SQLAlchemy 2 + Alembic + Postgres (Supabase) / SQLite (dev) + JWT (python-jose) +
-bcrypt (passlib) + WeasyPrint (PDF) + Jinja2.
+FastAPI + SQLAlchemy 2 + Alembic + MySQL/MariaDB (cPanel HostGator, driver PyMySQL) / SQLite
+(dev) + JWT (python-jose) + bcrypt (passlib) + WeasyPrint (PDF) + Jinja2.
+
+> Em migração de Postgres (Supabase) para MySQL/MariaDB (HostGator) — ver
+> `../instrucoes-migracao-postgres-mysql.md` pro roteiro completo. Nenhuma alteração de schema
+> foi necessária (todos os enums já usavam `native_enum=False`, e o único tipo Postgres-específico,
+> `JSONB` em `products.specs`, já caía em `JSON` genérico via `with_variant`). `DATABASE_URL` aceita
+> tanto `mysql+pymysql://...` quanto `postgresql+psycopg2://...` (o driver Postgres continua nas
+> dependências só até o Postgres antigo ser desativado — ver `requirements.txt`).
 
 ## Rodando localmente
 
@@ -28,11 +35,25 @@ cp .env.example .env
 ```
 
 Edite `.env`:
-- `DATABASE_URL`: string do Postgres do Supabase (`postgresql+psycopg2://...`). Para rodar sem
-  Postgres disponível, use `sqlite:///./dev.db` — funciona igual para tudo, inclusive Alembic.
+- `DATABASE_URL`: string do MySQL/MariaDB (`mysql+pymysql://usuario:senha@host:3306/banco`).
+  Para rodar sem banco disponível, use `sqlite:///./dev.db` — funciona igual para tudo, inclusive
+  Alembic. Durante a transição, ainda aceita `postgresql+psycopg2://...` (Supabase legado).
+- `MYSQL_DATABASE_URL`: só usada pelo script de migração de dados (Etapa 4) — aponta pro MySQL de
+  destino enquanto `DATABASE_URL` ainda aponta pro Postgres de origem. Sem uso fora desse script.
 - `JWT_SECRET`: qualquer string aleatória longa.
 - `FRONTEND_ORIGIN`: origem(ns) do frontend (ex.: `http://localhost:5174` em dev; separe por
   vírgula se houver mais de uma).
+
+### Rodando localmente com MySQL/MariaDB
+
+```bash
+# instale o MySQL/MariaDB localmente (ou use um container: docker run -p 3306:3306 ...)
+# crie o banco com charset/collation compatíveis com os dados em português:
+mysql -u root -p -e "CREATE DATABASE jmt_solar_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
+```
+
+No `.env`: `DATABASE_URL=mysql+pymysql://root:senha@localhost:3306/jmt_solar_dev`, depois
+`alembic upgrade head` e `python scripts/seed_users.py` normalmente.
 
 ### 3. Migrações e seed dos usuários
 

@@ -67,10 +67,15 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    connect_args = {}
+    if settings.DATABASE_URL.startswith("mysql"):
+        connect_args = {"charset": "utf8mb4"}
+
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args=connect_args,
     )
 
     with connectable.connect() as connection:

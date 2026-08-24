@@ -12,6 +12,12 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str = "sqlite:///./dev.db"
 
+    # Usada só pelo script de migração de dados (scripts/migrate_postgres_to_mysql.py) durante a
+    # transição Postgres -> MySQL: aponta pro banco MySQL de destino enquanto DATABASE_URL ainda
+    # aponta pro Postgres de origem. Não é usada pela aplicação em runtime — só depois que a
+    # migração for validada, DATABASE_URL passa a apontar pro MySQL e essa variável some.
+    MYSQL_DATABASE_URL: str | None = None
+
     JWT_SECRET: str = "dev-secret-change-me"
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 1440
