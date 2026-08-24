@@ -451,3 +451,92 @@ export interface DashboardFilters {
   data_inicio?: string;
   data_fim?: string;
 }
+
+// ---------------------------------------------------------------------------
+// Leads públicos (formulário de contato da página institucional)
+// ---------------------------------------------------------------------------
+
+export type InteresseLead = 'Energia Solar' | 'Mobilidade Elétrica' | 'Ambos';
+export type ConsumoMedioMensal =
+  | 'Até 200 kWh'
+  | 'De 201 a 500 kWh'
+  | 'De 501 a 700 kWh'
+  | 'De 701 a 1000 kWh'
+  | 'Acima de 1000 kWh';
+export type QuandoPretendeInvestir =
+  | 'Quero começar agora'
+  | 'Nos próximos 3 meses'
+  | 'Nos próximos 6 meses a 1 ano'
+  | 'Ainda estou pesquisando';
+export type FaixaParcelaMensal =
+  | 'Até R$ 300/mês'
+  | 'De R$ 301 a R$ 500/mês'
+  | 'Em torno de R$ 699/mês'
+  | 'Acima de R$ 700/mês';
+
+export const INTERESSE_LEAD: InteresseLead[] = ['Energia Solar', 'Mobilidade Elétrica', 'Ambos'];
+
+export const CONSUMO_MEDIO_MENSAL: ConsumoMedioMensal[] = [
+  'Até 200 kWh',
+  'De 201 a 500 kWh',
+  'De 501 a 700 kWh',
+  'De 701 a 1000 kWh',
+  'Acima de 1000 kWh',
+];
+
+export const QUANDO_PRETENDE_INVESTIR: QuandoPretendeInvestir[] = [
+  'Quero começar agora',
+  'Nos próximos 3 meses',
+  'Nos próximos 6 meses a 1 ano',
+  'Ainda estou pesquisando',
+];
+
+export const FAIXA_PARCELA_MENSAL: FaixaParcelaMensal[] = [
+  'Até R$ 300/mês',
+  'De R$ 301 a R$ 500/mês',
+  'Em torno de R$ 699/mês',
+  'Acima de R$ 700/mês',
+];
+
+export interface PublicLeadInput {
+  nome: string;
+  cidade: string;
+  telefone: string;
+  email?: string;
+  interesse: InteresseLead;
+  consumo_medio_mensal?: ConsumoMedioMensal;
+  tipo_projeto?: TipoResidencia;
+  quando_pretende_investir?: QuandoPretendeInvestir;
+  faixa_parcela_mensal?: FaixaParcelaMensal;
+  mensagem?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Pedidos do site (gestão interna dos leads públicos)
+// ---------------------------------------------------------------------------
+
+export type LeadStatus = 'Novo' | 'Em Contato' | 'Orçamento Enviado' | 'Convertido' | 'Descartado';
+
+export const LEAD_STATUS: LeadStatus[] = [
+  'Novo',
+  'Em Contato',
+  'Orçamento Enviado',
+  'Convertido',
+  'Descartado',
+];
+
+export interface Lead {
+  id: number;
+  nome: string;
+  cidade: string;
+  telefone: string;
+  email?: string | null;
+  interesse: InteresseLead;
+  consumo_medio_mensal?: ConsumoMedioMensal | null;
+  tipo_projeto?: TipoResidencia | null;
+  quando_pretende_investir?: QuandoPretendeInvestir | null;
+  faixa_parcela_mensal?: FaixaParcelaMensal | null;
+  mensagem?: string | null;
+  status: LeadStatus;
+  created_at: string;
+}

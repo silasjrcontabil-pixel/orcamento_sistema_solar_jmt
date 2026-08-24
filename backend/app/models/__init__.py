@@ -6,6 +6,7 @@ from app.models.budget_solar_config import BudgetSolarConfig  # noqa: F401
 from app.models.budget_status_history import BudgetStatusHistory  # noqa: F401
 from app.models.client import Client  # noqa: F401
 from app.models.product import Product  # noqa: F401
+from app.models.public_lead import PublicLead  # noqa: F401
 from app.models.user import User  # noqa: F401
 
 __all__ = [
@@ -17,4 +18,5 @@ __all__ = [
     "BudgetItem",
     "BudgetStatusHistory",
     "BudgetEditHistory",
+    "PublicLead",
 ]

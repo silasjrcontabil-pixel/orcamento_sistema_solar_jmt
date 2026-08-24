@@ -27,9 +27,12 @@ import type {
   LoginResponse,
   MunicipioOption,
   OrcamentoStatus,
+  Lead,
+  LeadStatus,
   Product,
   ProductFilters,
   ProductPayload,
+  PublicLeadInput,
   UserAccount,
   UserInput,
 } from '../types';
@@ -228,6 +231,25 @@ export const dashboardApi = {
   porVendedor: () => request<DashboardPorVendedor[]>('/dashboard/por_vendedor'),
   evolucao: (meses = 12) =>
     request<DashboardEvolucaoPonto[]>('/dashboard/evolucao', { query: { meses } }),
+};
+
+// ---------------------------------------------------------------------------
+// Leads públicos (formulário de contato da página institucional, sem login)
+// ---------------------------------------------------------------------------
+
+export const publicLeadsApi = {
+  create: (payload: PublicLeadInput) =>
+    request<{ id: number }>('/public/leads', { method: 'POST', body: payload, skipAuth: true }),
+};
+
+// ---------------------------------------------------------------------------
+// Pedidos do site (gestão interna dos leads públicos, autenticado)
+// ---------------------------------------------------------------------------
+
+export const leadsApi = {
+  list: () => request<Lead[]>('/leads'),
+  updateStatus: (id: number, status: LeadStatus) =>
+    request<Lead>(`/leads/${id}/status`, { method: 'PUT', body: { status } }),
 };
 
 export { getToken, AUTH_STORAGE_KEY };

@@ -65,6 +65,49 @@ class Orientacao(str, enum.Enum):
     leste_oeste = "Leste/Oeste"
 
 
+# --- Formulário público de captação de leads (página institucional) ---
+
+
+class InteresseLead(str, enum.Enum):
+    energia_solar = "Energia Solar"
+    mobilidade_eletrica = "Mobilidade Elétrica"
+    ambos = "Ambos"
+
+
+class ConsumoMedioMensal(str, enum.Enum):
+    ate_200 = "Até 200 kWh"
+    de_201_a_500 = "De 201 a 500 kWh"
+    de_501_a_700 = "De 501 a 700 kWh"
+    de_701_a_1000 = "De 701 a 1000 kWh"
+    acima_de_1000 = "Acima de 1000 kWh"
+
+
+class QuandoPretendeInvestir(str, enum.Enum):
+    agora = "Quero começar agora"
+    proximos_3_meses = "Nos próximos 3 meses"
+    proximos_6_meses_a_1_ano = "Nos próximos 6 meses a 1 ano"
+    ainda_pesquisando = "Ainda estou pesquisando"
+
+
+class FaixaParcelaMensal(str, enum.Enum):
+    ate_300 = "Até R$ 300/mês"
+    de_301_a_500 = "De R$ 301 a R$ 500/mês"
+    em_torno_de_699 = "Em torno de R$ 699/mês"
+    acima_de_700 = "Acima de R$ 700/mês"
+
+
+class LeadStatus(str, enum.Enum):
+    """Acompanhamento manual do vendedor sobre o que aconteceu com o pedido do site —
+    não tenta adivinhar/casar automaticamente com um orçamento (nome/telefone podem não
+    bater exatamente), o vendedor mesmo marca o andamento."""
+
+    novo = "Novo"
+    em_contato = "Em Contato"
+    orcamento_enviado = "Orçamento Enviado"
+    convertido = "Convertido"
+    descartado = "Descartado"
+
+
 # Transições de status permitidas para orçamentos (regra de negócio: nunca deletar, só cancelar).
 ALLOWED_STATUS_TRANSITIONS: dict[OrcamentoStatus, set[OrcamentoStatus]] = {
     OrcamentoStatus.rascunho: {OrcamentoStatus.enviado, OrcamentoStatus.cancelado},

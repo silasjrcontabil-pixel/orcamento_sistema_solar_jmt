@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/auth';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
@@ -18,7 +18,7 @@ export function Login() {
   const location = useLocation();
 
   if (isAuthenticated) {
-    const from = (location.state as { from?: Location })?.from?.pathname ?? '/';
+    const from = (location.state as { from?: Location })?.from?.pathname ?? '/dashboard';
     return <Navigate to={from} replace />;
   }
 
@@ -27,7 +27,7 @@ export function Login() {
     clearError();
     try {
       await login(username, password);
-      navigate('/', { replace: true });
+      navigate('/dashboard', { replace: true });
     } catch {
       // erro já fica no store (useAuthStore.error) e é exibido via ErrorBanner
     }
@@ -36,6 +36,12 @@ export function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
+        <Link
+          to="/"
+          className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-primary"
+        >
+          ← Voltar ao site
+        </Link>
         <div className="flex flex-col items-center mb-8">
           <img
             src={logo}

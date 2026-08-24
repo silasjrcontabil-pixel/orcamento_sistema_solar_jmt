@@ -4,10 +4,11 @@ import { useAuthStore } from '../store/auth';
 import logo from '../assets/logo.jpeg';
 
 const NAV_ITEMS = [
-  { to: '/', label: 'Dashboard', end: true },
+  { to: '/dashboard', label: 'Dashboard', end: true },
   { to: '/clientes', label: 'Clientes' },
   { to: '/produtos', label: 'Produtos' },
   { to: '/orcamentos', label: 'Orçamentos' },
+  { to: '/pedidos-site', label: 'Pedidos do Site' },
   { to: '/vendedores', label: 'Vendedores' },
 ];
 

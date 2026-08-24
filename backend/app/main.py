@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import auth, budgets, client_lookup, clients, dashboard, geo, products, users
+from app.routers import auth, budgets, client_lookup, clients, dashboard, geo, leads, products, public_leads, users
 from app.services.reference_data import load_reference_data
 
 
@@ -34,6 +34,8 @@ app.include_router(products.router)
 app.include_router(budgets.router)
 app.include_router(dashboard.router)
 app.include_router(users.router)
+app.include_router(public_leads.router)
+app.include_router(leads.router)
 
 
 @app.get("/health")

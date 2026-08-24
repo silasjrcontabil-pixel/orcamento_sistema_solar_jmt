@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { Landing } from './pages/Landing';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { ClientsList } from './pages/clients/List';
@@ -12,9 +13,11 @@ import { BudgetWizard } from './pages/budgets/Wizard';
 import { BudgetDetail } from './pages/budgets/Detail';
 import { VendedoresList } from './pages/vendedores/List';
 import { VendedorForm } from './pages/vendedores/Form';
+import { LeadsList } from './pages/leads/List';
 import { NotFound } from './pages/NotFound';
 
 export const router = createBrowserRouter([
+  { path: '/', element: <Landing /> },
   { path: '/login', element: <Login /> },
   {
     element: <ProtectedRoute />,
@@ -22,7 +25,7 @@ export const router = createBrowserRouter([
       {
         element: <Layout />,
         children: [
-          { path: '/', element: <Dashboard /> },
+          { path: '/dashboard', element: <Dashboard /> },
           { path: '/clientes', element: <ClientsList /> },
           { path: '/clientes/novo', element: <ClientForm /> },
           { path: '/clientes/:id/editar', element: <ClientForm /> },
@@ -35,10 +38,11 @@ export const router = createBrowserRouter([
           { path: '/orcamentos/:id/editar', element: <BudgetWizard /> },
           { path: '/vendedores', element: <VendedoresList /> },
           { path: '/vendedores/novo', element: <VendedorForm /> },
+          { path: '/pedidos-site', element: <LeadsList /> },
           { path: '*', element: <NotFound /> },
         ],
       },
     ],
   },
-  { path: '*', element: <Navigate to="/login" replace /> },
+  { path: '*', element: <Navigate to="/" replace /> },
 ]);
