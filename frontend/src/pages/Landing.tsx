@@ -19,9 +19,9 @@ import {
 import logo from '../assets/logo.jpeg';
 import heroSolar from '../assets/hero-solar.jpg';
 
-const WHATSAPP_NUMERO = '5562985140200';
-const TELEFONE_EXIBICAO = '(62) 98514-0200';
-const EMAIL_CONTATO = 'comercial.jmtsolar@gmail.com';
+const WHATSAPP_NUMERO = '556292863606';
+const TELEFONE_EXIBICAO = '(62) 9 9286-3606';
+const EMAIL_CONTATO = 'comercial@jmtenergiasolar.com.br';
 
 const EMPTY_FORM: PublicLeadInput = {
   nome: '',
