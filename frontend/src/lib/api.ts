@@ -74,6 +74,25 @@ function handleUnauthorized() {
   }
 }
 
+/** Erros de validação do FastAPI/Pydantic vêm como `detail: [{loc, msg, type}, ...]` — um
+ * JSON.stringify cru disso era mostrado direto pro usuário antes. Monta uma mensagem legível
+ * a partir do(s) campo(s) que falharam, com fallback pros formatos mais simples de erro. */
+function _mensagemDeErro(data: unknown, status: number): string {
+  const detail = (data as { detail?: unknown } | undefined)?.detail;
+  if (Array.isArray(detail)) {
+    const partes = detail.map((d) => {
+      const item = d as { loc?: unknown[]; msg?: string };
+      const campo = Array.isArray(item.loc) ? item.loc[item.loc.length - 1] : undefined;
+      return campo && item.msg ? `${campo}: ${item.msg}` : (item.msg ?? JSON.stringify(item));
+    });
+    return partes.join(' | ');
+  }
+  if (typeof detail === 'string') return detail;
+  const message = (data as { message?: unknown } | undefined)?.message;
+  if (typeof message === 'string') return message;
+  return `Erro ${status} ao processar a requisição.`;
+}
+
 function buildQuery(params?: object): string {
   if (!params) return '';
   const usp = new URLSearchParams();
@@ -137,9 +156,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   const data = text ? JSON.parse(text) : undefined;
 
   if (!response.ok) {
-    const message =
-      (data && (data.detail || data.message)) || `Erro ${response.status} ao processar a requisição.`;
-    throw new ApiError(typeof message === 'string' ? message : JSON.stringify(message), response.status, data);
+    throw new ApiError(_mensagemDeErro(data, response.status), response.status, data);
   }
 
   return data as T;

@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { publicLeadsApi } from '../lib/api';
+import { ApiError, publicLeadsApi } from '../lib/api';
 import type {
   ConsumoMedioMensal,
   FaixaParcelaMensal,
@@ -81,8 +81,14 @@ export function Landing() {
         mensagem: form.mensagem || undefined,
       });
       setEnviado(true);
-    } catch {
-      setErro('Não foi possível enviar sua solicitação agora. Tente novamente em instantes ou fale no WhatsApp.');
+    } catch (err) {
+      // Erro de validação (422, ex.: telefone curto demais) já vem com mensagem legível do
+      // campo — mostra direto. Qualquer outra falha (rede, servidor fora) usa a mensagem genérica.
+      const mensagemCampo = err instanceof ApiError && err.status === 422 ? err.message : null;
+      setErro(
+        mensagemCampo ??
+          'Não foi possível enviar sua solicitação agora. Tente novamente em instantes ou fale no WhatsApp.',
+      );
     } finally {
       setSubmitting(false);
     }
