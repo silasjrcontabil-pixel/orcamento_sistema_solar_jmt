@@ -2,6 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Tema escuro (padrão) — trios RGB (sem "rgb()"/vírgula) pra dar pra aplicar opacidade via
+     Tailwind (bg-background/50 etc.). Tema claro sobrescreve tudo abaixo em [data-theme="light"]. */
+  --color-background: 10 10 10;
+  --color-background-soft: 17 17 19;
+  --color-surface: 24 24 27;
+  --color-secondary: 28 28 31;
+  --color-border: 42 42 46;
+  --color-border-light: 56 56 62;
+  --color-foreground: 245 245 244;
+  --color-muted-foreground: 154 154 159;
+}
+
+[data-theme='light'] {
+  --color-background: 247 247 248;
+  --color-background-soft: 238 240 242;
+  --color-surface: 255 255 255;
+  --color-secondary: 241 242 244;
+  --color-border: 226 228 232;
+  --color-border-light: 208 211 217;
+  --color-foreground: 24 24 27;
+  --color-muted-foreground: 90 90 97;
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -9,6 +33,10 @@
 
   html {
     color-scheme: dark;
+  }
+
+  html[data-theme='light'] {
+    color-scheme: light;
   }
 
   /* No celular tudo fica pequeno/apertado com o mesmo root de 16px do desktop — como a
@@ -43,14 +71,14 @@
     height: 10px;
   }
   ::-webkit-scrollbar-track {
-    background: #0a0a0a;
+    @apply bg-background;
   }
   ::-webkit-scrollbar-thumb {
-    background: #2a2a2e;
+    @apply bg-border;
     border-radius: 8px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #3a3a40;
+    @apply bg-border-light;
   }
 
   input[type='number']::-webkit-inner-spin-button,

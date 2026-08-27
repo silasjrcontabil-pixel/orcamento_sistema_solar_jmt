@@ -24,6 +24,14 @@ class Settings(BaseSettings):
 
     FRONTEND_ORIGIN: str = "http://localhost:5174"
 
+    # Confirmação automática por WhatsApp pro CLIENTE que pediu orçamento no site (envia pro
+    # número que a própria pessoa digitou no formulário, não pro nosso). Tudo opcional — se
+    # qualquer uma faltar, o envio é só pulado (log de aviso), nunca quebra o cadastro do lead
+    # em si (ver services/whatsapp_notify.py).
+    EVOLUTION_API_URL: str | None = None
+    EVOLUTION_API_KEY: str | None = None
+    EVOLUTION_INSTANCE_NAME: str | None = None
+
     @property
     def FRONTEND_ORIGINS(self) -> list[str]:
         """FRONTEND_ORIGIN pode conter múltiplas origens separadas por vírgula."""

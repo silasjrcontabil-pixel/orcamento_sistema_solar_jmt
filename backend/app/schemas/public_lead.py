@@ -1,10 +1,11 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.enums import ConsumoMedioMensal, FaixaParcelaMensal, InteresseLead, LeadStatus, QuandoPretendeInvestir, TipoResidencia
 from app.schemas.common import UTCDateTime
+from app.services.telefone import normalizar_telefone_br
 
 
 class PublicLeadCreate(BaseModel):
@@ -18,6 +19,13 @@ class PublicLeadCreate(BaseModel):
     quando_pretende_investir: Optional[QuandoPretendeInvestir] = None
     faixa_parcela_mensal: Optional[FaixaParcelaMensal] = None
     mensagem: Optional[str] = None
+
+    @field_validator("telefone")
+    @classmethod
+    def _valida_telefone(cls, v: str) -> str:
+        # Normaliza pra só dígitos (DDD+número, sem "55") — garante que dá pra notificar por
+        # WhatsApp depois, e já avisa o cliente na hora se o DDD estiver faltando/errado.
+        return normalizar_telefone_br(v)
 
 
 class PublicLeadOut(BaseModel):
